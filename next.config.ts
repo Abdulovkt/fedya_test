@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "s2.fedorpharmshop.com",
         pathname: "/wp-content/**",
       },
+      {
+        protocol: "https",
+        hostname: "fedorpharmshop.com",
+        pathname: "/wp-content/**",
+      },
     ],
   },
 };
