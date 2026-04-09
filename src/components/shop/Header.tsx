@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
 import { asc } from "drizzle-orm";
 import { getCartItemCount } from "@/lib/cart";
+import { SearchBar } from "@/components/shop/SearchBar";
 
 export async function Header() {
   const cats = await db
@@ -13,14 +15,21 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-brand-border bg-brand-surface/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/"
             className="text-xl font-bold tracking-tight text-brand"
           >
             SportNutrition
           </Link>
+
+          <div className="flex-1">
+            <Suspense>
+              <SearchBar categories={cats} />
+            </Suspense>
+          </div>
+
           <Link
             href="/cart"
             className="relative rounded-lg border border-brand-border bg-brand-elevated px-3 py-1.5 text-sm font-medium text-brand-heading shadow-sm hover:border-brand/40"
@@ -33,7 +42,8 @@ export async function Header() {
             ) : null}
           </Link>
         </div>
-        <nav className="flex flex-wrap items-center gap-2 text-sm">
+
+        <nav className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <Link
             href="/catalog"
             className="rounded-md px-2 py-1 text-brand-muted hover:bg-brand-elevated hover:text-brand-heading"
