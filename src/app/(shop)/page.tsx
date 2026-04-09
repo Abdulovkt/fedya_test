@@ -27,36 +27,33 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-brand-border bg-brand-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 lg:flex-row lg:items-center lg:gap-14 lg:px-8 lg:py-16">
-          <div className="flex-1 text-center lg:text-left">
-            <p className="text-sm font-medium uppercase tracking-widest text-brand-secondary">
-              Интернет-магазин
-            </p>
-            <h1 className="mt-4 text-4xl font-bold tracking-tight text-brand-heading sm:text-5xl">
-              Спортивное питание с доставкой
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-brand-muted lg:mx-0">
-              Протеин, креатин, аминокислоты и добавки для тренировок — удобный
-              каталог и быстрое оформление заказа.
-            </p>
-            <Link
-              href="/catalog"
-              className="mt-8 inline-flex rounded-md bg-brand px-8 py-3 text-base font-semibold text-white shadow-md shadow-brand/20 transition hover:bg-brand-hover"
-            >
-              Смотреть каталог
-            </Link>
-          </div>
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-lg overflow-hidden rounded-2xl border border-brand-border shadow-lg lg:mx-0 lg:max-w-none lg:flex-1 lg:aspect-[5/4]">
-            <Image
-              src={REFERENCE_HERO_IMAGE}
-              alt="Спортивное питание и тренировки"
-              fill
-              priority
-              className="object-cover object-center"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
+      <section className="relative overflow-hidden border-b border-brand-border">
+        <Image
+          src={REFERENCE_HERO_IMAGE}
+          alt="Спортивное питание и тренировки"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
+        <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-center px-8 py-28 sm:px-12 sm:py-36 lg:px-16 lg:py-44">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
+            Интернет-магазин
+          </p>
+          <h1 className="mt-4 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-5xl lg:text-6xl">
+            Спортивное питание с доставкой
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-white/80">
+            Протеин, креатин, аминокислоты и добавки для тренировок — удобный
+            каталог и быстрое оформление заказа.
+          </p>
+          <Link
+            href="/catalog"
+            className="mt-10 inline-flex rounded-md bg-brand px-10 py-4 text-base font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-brand-hover"
+          >
+            Смотреть каталог
+          </Link>
         </div>
       </section>
 
