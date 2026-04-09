@@ -5,9 +5,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 
-/** Как на примере: og:image главной. */
-const REFERENCE_HERO_IMAGE =
-  "https://fedorpharmshop.com/wp-content/uploads/sites/3/2026/02/photo_2026-02-25_01-01-13.jpg";
+const REFERENCE_HERO_IMAGE = "/hero.jpg";
 
 export default async function HomePage() {
   const newProducts = await db
@@ -27,33 +25,35 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-brand-border">
-        <Image
-          src={REFERENCE_HERO_IMAGE}
-          alt="Спортивное питание и тренировки"
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-        <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-center px-8 py-28 sm:px-12 sm:py-36 lg:px-16 lg:py-44">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
-            Интернет-магазин
-          </p>
-          <h1 className="mt-4 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-5xl lg:text-6xl">
-            Спортивное питание с доставкой
-          </h1>
-          <p className="mt-5 max-w-xl text-lg text-white/80">
-            Протеин, креатин, аминокислоты и добавки для тренировок — удобный
-            каталог и быстрое оформление заказа.
-          </p>
-          <Link
-            href="/catalog"
-            className="mt-10 inline-flex rounded-md bg-brand px-10 py-4 text-base font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-brand-hover"
-          >
-            Смотреть каталог
-          </Link>
+      <section className="border-b border-brand-border bg-brand-bg px-4 py-8 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl border border-brand-teal/40">
+          <Image
+            src={REFERENCE_HERO_IMAGE}
+            alt="Спортивное питание и тренировки"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="(max-width: 1280px) 100vw, 1280px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/20" />
+          <div className="relative flex flex-col items-start justify-center px-8 py-24 sm:px-12 sm:py-32 lg:px-16 lg:py-40">
+            <h1 className="max-w-xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-5xl">
+              Интернет-магазин
+              <br />
+              Спортивного питания
+            </h1>
+            <p className="mt-4 max-w-sm text-base text-white/80">
+              Купите спортпит с доставкой из России.
+              <br />
+              Большой выбор, лучшие цены.
+            </p>
+            <Link
+              href="/catalog"
+              className="mt-8 inline-flex rounded-md bg-brand-teal px-8 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-brand-teal/80"
+            >
+              Смотреть каталог
+            </Link>
+          </div>
         </div>
       </section>
 
