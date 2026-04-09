@@ -1,4 +1,4 @@
-import { asc, eq, like, and } from "drizzle-orm";
+import { asc, eq, and } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
@@ -13,12 +13,12 @@ export default async function CatalogPage({
   searchParams: SearchParams;
 }) {
   const { q, category } = await searchParams;
+  const needle = q?.trim().toLowerCase() ?? "";
 
   const conditions = [eq(products.isActive, true)];
-  if (q?.trim()) conditions.push(like(products.name, `%${q.trim()}%`));
   if (category?.trim()) conditions.push(eq(categories.slug, category.trim()));
 
-  const list = await db
+  const rows = await db
     .select({
       id: products.id,
       name: products.name,
@@ -32,17 +32,21 @@ export default async function CatalogPage({
     .where(and(...conditions))
     .orderBy(asc(categories.sortOrder), asc(products.name));
 
-  const title =
-    q?.trim()
-      ? `Результаты поиска: «${q.trim()}»`
-      : category
-        ? list[0]?.categoryName ?? "Каталог"
-        : "Каталог";
+  // SQLite lower() is ASCII-only — filter Cyrillic case-insensitively in JS
+  const list = needle
+    ? rows.filter((p) => p.name.toLowerCase().includes(needle))
+    : rows;
+
+  const title = needle
+    ? `Результаты поиска: «${q!.trim()}»`
+    : category
+      ? (list[0]?.categoryName ?? "Каталог")
+      : "Каталог";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-brand-heading">{title}</h1>
-      {!q && !category && (
+      {!needle && !category && (
         <p className="mt-2 text-brand-muted">
           Все активные товары. Выберите категорию в меню или откройте карточку.
         </p>
@@ -64,8 +68,8 @@ export default async function CatalogPage({
         </div>
       ) : (
         <p className="mt-8 text-brand-muted">
-          {q?.trim()
-            ? `По запросу «${q.trim()}» ничего не найдено.`
+          {needle
+            ? `По запросу «${q!.trim()}» ничего не найдено.`
             : "Товары скоро появятся."}
         </p>
       )}
