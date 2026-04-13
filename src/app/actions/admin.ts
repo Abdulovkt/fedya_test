@@ -107,10 +107,15 @@ export async function createProduct(formData: FormData) {
   revalidatePath("/");
 }
 
-export async function updateProduct(formData: FormData) {
+export type UpdateProductState = { ok?: boolean; error?: string } | null;
+
+export async function updateProduct(
+  _prev: UpdateProductState,
+  formData: FormData,
+): Promise<UpdateProductState> {
   await requireAdmin();
   const id = Number(formData.get("id"));
-  if (!Number.isFinite(id)) return;
+  if (!Number.isFinite(id)) return { error: "Неверный ID товара" };
   const file = formData.get("image") as File | null;
   const parsed = productSchema.safeParse({
     categoryId: formData.get("categoryId"),
@@ -120,13 +125,11 @@ export async function updateProduct(formData: FormData) {
     priceRub: formData.get("priceRub"),
     stock: formData.get("stock"),
   });
-  if (!parsed.success) return;
+  if (!parsed.success) return { error: "Проверьте правильность заполнения полей" };
 
   const isActive = formData.get("isActive") === "on";
   const imageUrl = await saveUploadedImage(file);
-
-  const slug =
-    parsed.data.slug?.trim() || slugify(parsed.data.name);
+  const slug = parsed.data.slug?.trim() || slugify(parsed.data.name);
 
   await db
     .update(products)
@@ -147,6 +150,7 @@ export async function updateProduct(formData: FormData) {
   revalidatePath("/catalog");
   revalidatePath("/");
   revalidatePath(`/product/${slug}`);
+  return { ok: true };
 }
 
 export async function deleteProduct(formData: FormData) {

@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
-import { createProduct, updateProduct } from "@/app/actions/admin";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createProduct, updateProduct, type UpdateProductState } from "@/app/actions/admin";
 
 type Category = { id: number; name: string };
 
@@ -23,30 +24,58 @@ type Props = {
 };
 
 export function ProductForm({ categories, mode, product }: Props) {
-  const action = mode === "create" ? createProduct : updateProduct;
+  const router = useRouter();
   const priceRub = product ? product.priceKopecks / 100 : "";
+
+  const [editState, editAction, editPending] = useActionState<UpdateProductState, FormData>(
+    updateProduct,
+    null,
+  );
+  const [toast, setToast] = useState<"success" | "error" | null>(null);
+
+  useEffect(() => {
+    if (!editState) return;
+    if (editState.ok) {
+      setToast("success");
+      const t = setTimeout(() => router.push("/admin/products"), 1500);
+      return () => clearTimeout(t);
+    }
+    if (editState.error) {
+      setToast("error");
+    }
+  }, [editState, router]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
+    if (!file) { setPreview(null); return; }
+    setPreview(URL.createObjectURL(file));
   }
 
   const currentImage = preview ?? (mode === "edit" ? (product?.imageUrl ?? null) : null);
 
   return (
     <form
-      action={action}
+      action={mode === "edit" ? editAction : createProduct}
       encType="multipart/form-data"
       className="max-w-xl space-y-4 rounded-xl border border-brand-border bg-brand-surface/40 p-6"
     >
+      {/* Toast notification */}
+      {toast === "success" && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Изменения сохранены. Переход на список…
+        </div>
+      )}
+      {toast === "error" && editState?.error && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {editState.error}
+        </div>
+      )}
+
       {mode === "edit" && product ? (
         <input type="hidden" name="id" value={product.id} />
       ) : null}
@@ -248,9 +277,14 @@ export function ProductForm({ categories, mode, product }: Props) {
 
       <button
         type="submit"
-        className="rounded-lg bg-brand px-6 py-2 font-semibold text-white hover:bg-brand-hover"
+        disabled={mode === "edit" && editPending}
+        className="rounded-lg bg-brand px-6 py-2 font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
       >
-        {mode === "create" ? "Создать товар" : "Сохранить"}
+        {mode === "create"
+          ? "Создать товар"
+          : editPending
+            ? "Сохранение…"
+            : "Сохранить"}
       </button>
     </form>
   );
