@@ -1,66 +1,45 @@
-import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { orders } from "@/db/schema";
-import { formatPrice } from "@/lib/format";
+import { orderItems, orders, products } from "@/db/schema";
+import { OrdersTable } from "@/components/admin/OrdersTable";
 
 export const metadata = { title: "Заказы" };
 
-const statusLabel: Record<string, string> = {
-  new: "Новый",
-  processing: "В работе",
-  shipped: "Отправлен",
-};
-
 export default async function AdminOrdersPage() {
-  const list = await db
-    .select()
-    .from(orders)
-    .orderBy(desc(orders.createdAt));
+  const list = await db.select().from(orders).orderBy(desc(orders.createdAt));
+
+  const allItems = await db
+    .select({
+      orderId: orderItems.orderId,
+      productName: products.name,
+      quantity: orderItems.quantity,
+      priceAtOrder: orderItems.priceAtOrder,
+    })
+    .from(orderItems)
+    .innerJoin(products, eq(orderItems.productId, products.id));
+
+  const itemsByOrder = new Map<number, typeof allItems>();
+  for (const item of allItems) {
+    const arr = itemsByOrder.get(item.orderId) ?? [];
+    arr.push(item);
+    itemsByOrder.set(item.orderId, arr);
+  }
+
+  const ordersWithItems = list.map((o) => ({
+    ...o,
+    items: itemsByOrder.get(o.id) ?? [],
+  }));
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-brand-heading">Заказы</h1>
-      <div className="mt-8 overflow-x-auto rounded-xl border border-brand-border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-brand-surface/80 text-brand-muted">
-            <tr>
-              <th className="px-4 py-2">#</th>
-              <th className="px-4 py-2">Дата</th>
-              <th className="px-4 py-2">Клиент</th>
-              <th className="px-4 py-2">Сумма</th>
-              <th className="px-4 py-2">Статус</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((o) => (
-              <tr key={o.id} className="border-t border-brand-border">
-                <td className="px-4 py-2">
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="font-mono text-brand hover:underline"
-                  >
-                    {o.id}
-                  </Link>
-                </td>
-                <td className="px-4 py-2 text-brand-muted">
-                  {o.createdAt instanceof Date
-                    ? o.createdAt.toLocaleString("ru-RU")
-                    : ""}
-                </td>
-                <td className="px-4 py-2 text-brand-heading">{o.customerName}</td>
-                <td className="px-4 py-2">{formatPrice(o.totalAmount)}</td>
-                <td className="px-4 py-2 text-brand-muted">
-                  {statusLabel[o.status] ?? o.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-8">
+        {list.length === 0 ? (
+          <p className="text-brand-muted">Заказов пока нет.</p>
+        ) : (
+          <OrdersTable orders={ordersWithItems} />
+        )}
       </div>
-      {list.length === 0 ? (
-        <p className="mt-6 text-brand-muted">Заказов пока нет.</p>
-      ) : null}
     </div>
   );
 }

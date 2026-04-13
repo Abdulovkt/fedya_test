@@ -82,6 +82,18 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <p className="mt-2 text-brand-heading">{order.customerName}</p>
           <p className="text-brand-muted">{order.phone}</p>
           <p className="text-brand-muted">{order.email}</p>
+          {order.telegram ? (
+            <p className="text-brand-teal">
+              <a
+                href={`https://t.me/${order.telegram.replace(/^@/, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                {order.telegram.startsWith("@") ? order.telegram : `@${order.telegram}`}
+              </a>
+            </p>
+          ) : null}
           {order.address ? (
             <p className="mt-2 text-sm text-brand-heading">{order.address}</p>
           ) : null}

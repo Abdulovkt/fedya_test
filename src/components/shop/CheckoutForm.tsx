@@ -68,6 +68,17 @@ export function CheckoutForm() {
         ) : null}
       </div>
       <div>
+        <label htmlFor="telegram" className="block text-sm text-brand-muted">
+          Telegram (необязательно)
+        </label>
+        <input
+          id="telegram"
+          name="telegram"
+          placeholder="@username"
+          className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+        />
+      </div>
+      <div>
         <label htmlFor="address" className="block text-sm text-brand-muted">
           Адрес доставки (необязательно)
         </label>

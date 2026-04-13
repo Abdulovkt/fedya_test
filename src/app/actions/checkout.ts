@@ -11,6 +11,7 @@ const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
   phone: z.string().min(10, "Укажите телефон"),
   email: z.string().email("Некорректный email"),
+  telegram: z.string().optional(),
   address: z.string().optional(),
   comment: z.string().optional(),
 });
@@ -28,6 +29,7 @@ export async function placeOrder(
     customerName: formData.get("customerName"),
     phone: formData.get("phone"),
     email: formData.get("email"),
+    telegram: formData.get("telegram") || undefined,
     address: formData.get("address") || undefined,
     comment: formData.get("comment") || undefined,
   });
@@ -60,6 +62,7 @@ export async function placeOrder(
       customerName: parsed.data.customerName,
       phone: parsed.data.phone,
       email: parsed.data.email,
+      telegram: parsed.data.telegram ?? null,
       address: parsed.data.address ?? null,
       comment: parsed.data.comment ?? null,
       totalAmount,

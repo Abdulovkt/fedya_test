@@ -81,6 +81,7 @@ export const orders = sqliteTable("orders", {
   customerName: text("customer_name").notNull(),
   phone: text("phone").notNull(),
   email: text("email").notNull(),
+  telegram: text("telegram"),
   address: text("address"),
   comment: text("comment"),
   totalAmount: integer("total_amount").notNull(),
