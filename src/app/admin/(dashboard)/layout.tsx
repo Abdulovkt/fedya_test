@@ -49,6 +49,12 @@ export default async function AdminDashboardLayout({
           >
             Чаты
           </Link>
+          <Link
+            href="/admin/settings"
+            className="rounded-md px-2 py-1.5 text-brand-heading hover:bg-brand-elevated"
+          >
+            Настройки
+          </Link>
         </nav>
         <div className="border-t border-brand-border pt-3">
           <Link

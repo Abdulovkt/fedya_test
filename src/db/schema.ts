@@ -119,6 +119,11 @@ export const orderItems = sqliteTable("order_items", {
   priceAtOrder: integer("price_at_order").notNull(),
 });
 
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull().default(""),
+});
+
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));

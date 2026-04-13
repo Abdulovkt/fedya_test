@@ -9,6 +9,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { categories, orders, products } from "@/db/schema";
 import { slugify } from "@/lib/format";
+import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
 
 async function requireAdmin() {
   const session = await auth();
@@ -160,6 +161,25 @@ export async function deleteProduct(formData: FormData) {
   await db.delete(products).where(eq(products.id, id));
   revalidatePath("/admin/products");
   revalidatePath("/catalog");
+}
+
+export type SaveSettingsState = { ok?: boolean; error?: string } | null;
+
+export async function saveEmailSettings(
+  _prev: SaveSettingsState,
+  formData: FormData,
+): Promise<SaveSettingsState> {
+  await requireAdmin();
+  try {
+    const data = Object.fromEntries(
+      SETTING_KEYS.map((k) => [k, (formData.get(k) as string | null) ?? ""]),
+    ) as Record<SettingKey, string>;
+    await saveSettings(data);
+    revalidatePath("/admin/settings");
+    return { ok: true };
+  } catch {
+    return { error: "Не удалось сохранить настройки" };
+  }
 }
 
 export async function markChatAsRead(orderId: number) {

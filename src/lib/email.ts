@@ -1,19 +1,26 @@
 import nodemailer from "nodemailer";
+import { getSettings } from "@/lib/settings";
 
-function getTransporter() {
+async function getTransporter() {
+  const s = await getSettings();
+  if (!s.smtp_user || !s.smtp_pass) return null;
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+    host: s.smtp_host || "smtp.gmail.com",
+    port: Number(s.smtp_port) || 587,
+    secure: s.smtp_secure === "true",
+    auth: { user: s.smtp_user, pass: s.smtp_pass },
   });
 }
 
-const FROM = process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "noreply@example.com";
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+async function getSiteUrl() {
+  const s = await getSettings();
+  return (s.site_url || "http://localhost:3000").replace(/\/$/, "");
+}
+
+async function getFrom() {
+  const s = await getSettings();
+  return s.smtp_from || s.smtp_user || "noreply@example.com";
+}
 
 export async function sendOrderConfirmationEmail({
   to,
@@ -26,12 +33,15 @@ export async function sendOrderConfirmationEmail({
   orderId: number;
   chatToken: string;
 }) {
-  if (!process.env.SMTP_USER) return; // email not configured — skip silently
+  const transporter = await getTransporter();
+  if (!transporter) return;
 
-  const chatUrl = `${SITE}/chat/${orderId}?token=${chatToken}`;
+  const siteUrl = await getSiteUrl();
+  const from = await getFrom();
+  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
 
-  await getTransporter().sendMail({
-    from: `"SportNutrition" <${FROM}>`,
+  await transporter.sendMail({
+    from: `"SportNutrition" <${from}>`,
     to,
     subject: `Заказ #${orderId} оформлен — SportNutrition`,
     html: `
@@ -64,12 +74,15 @@ export async function sendNewMessageEmail({
   chatToken: string;
   messageText: string;
 }) {
-  if (!process.env.SMTP_USER) return;
+  const transporter = await getTransporter();
+  if (!transporter) return;
 
-  const chatUrl = `${SITE}/chat/${orderId}?token=${chatToken}`;
+  const siteUrl = await getSiteUrl();
+  const from = await getFrom();
+  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
 
-  await getTransporter().sendMail({
-    from: `"SportNutrition" <${FROM}>`,
+  await transporter.sendMail({
+    from: `"SportNutrition" <${from}>`,
     to,
     subject: `Новое сообщение по заказу #${orderId}`,
     html: `
