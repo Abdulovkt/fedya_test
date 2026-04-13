@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { formatPrice } from "@/lib/format";
 
 type OrderItem = {
@@ -55,9 +55,8 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
           {orders.map((o) => {
             const isOpen = openId === o.id;
             return (
-              <>
+              <Fragment key={o.id}>
                 <tr
-                  key={o.id}
                   onClick={() => setOpenId(isOpen ? null : o.id)}
                   className="cursor-pointer border-t border-brand-border transition hover:bg-brand-elevated"
                 >
@@ -92,7 +91,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                 </tr>
 
                 {isOpen && (
-                  <tr key={`detail-${o.id}`} className="border-t border-brand-border bg-brand-elevated">
+                  <tr className="border-t border-brand-border bg-brand-elevated">
                     <td colSpan={6} className="px-6 py-5">
                       <div className="grid gap-6 sm:grid-cols-2">
                         {/* Customer info */}
@@ -195,7 +194,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
