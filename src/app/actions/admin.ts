@@ -162,6 +162,14 @@ export async function deleteProduct(formData: FormData) {
   revalidatePath("/catalog");
 }
 
+export async function markChatAsRead(orderId: number) {
+  await requireAdmin();
+  await db
+    .update(orders)
+    .set({ adminLastReadAt: Date.now() })
+    .where(eq(orders.id, orderId));
+}
+
 export async function updateOrderStatus(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("orderId"));

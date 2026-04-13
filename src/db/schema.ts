@@ -85,10 +85,24 @@ export const orders = sqliteTable("orders", {
   address: text("address"),
   comment: text("comment"),
   totalAmount: integer("total_amount").notNull(),
+  chatToken: text("chat_token"),
+  adminLastReadAt: integer("admin_last_read_at"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
+export const chatMessages = sqliteTable("chat_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  sender: text("sender", { enum: ["customer", "admin"] }).notNull(),
+  text: text("text").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
 });

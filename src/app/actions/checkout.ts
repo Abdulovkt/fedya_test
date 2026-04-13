@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { cartItems, orderItems, orders } from "@/db/schema";
 import { getCartId, getCartLines } from "@/lib/cart";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
@@ -55,6 +56,8 @@ export async function placeOrder(
     0,
   );
 
+  const chatToken = crypto.randomUUID();
+
   const [order] = await db
     .insert(orders)
     .values({
@@ -66,6 +69,7 @@ export async function placeOrder(
       address: parsed.data.address ?? null,
       comment: parsed.data.comment ?? null,
       totalAmount,
+      chatToken,
     })
     .returning({ id: orders.id });
 
@@ -84,5 +88,13 @@ export async function placeOrder(
 
   await db.delete(cartItems).where(eq(cartItems.cartId, cartId));
 
-  redirect(`/checkout/success?order=${order.id}`);
+  // Send confirmation email with chat link (non-blocking)
+  sendOrderConfirmationEmail({
+    to: parsed.data.email,
+    customerName: parsed.data.customerName,
+    orderId: order.id,
+    chatToken,
+  }).catch(() => {});
+
+  redirect(`/checkout/success?order=${order.id}&token=${chatToken}`);
 }
