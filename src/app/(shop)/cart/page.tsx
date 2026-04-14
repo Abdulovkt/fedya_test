@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { removeCartItem, updateCartItemQuantity } from "@/app/actions/cart";
 import { formatPrice } from "@/lib/format";
 import { getCartLines } from "@/lib/cart";
+import { CartItemControls } from "@/components/shop/CartItemControls";
 
 export const metadata = { title: "Корзина" };
 
@@ -24,10 +24,7 @@ export default async function CartPage() {
         <>
           <ul className="mt-8 divide-y divide-brand-border">
             {lines.map((line) => (
-              <li
-                key={line.itemId}
-                className="flex gap-4 py-6 first:pt-0"
-              >
+              <li key={line.itemId} className="flex gap-4 py-6 first:pt-0">
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
                   {line.imageUrl ? (
                     <Image
@@ -51,7 +48,10 @@ export default async function CartPage() {
                     {line.name}
                   </Link>
                   <p className="mt-1 text-sm text-brand">
-                    {formatPrice(line.price)} × {line.quantity}
+                    {formatPrice(line.price)} × {line.quantity}{" "}
+                    <span className="text-brand-muted">
+                      = {formatPrice(line.price * line.quantity)}
+                    </span>
                   </p>
                   {line.reservedUntil && (
                     <p className="mt-0.5 text-xs text-brand-muted">
@@ -64,37 +64,7 @@ export default async function CartPage() {
                       })}
                     </p>
                   )}
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <form action={updateCartItemQuantity} className="flex items-center gap-2">
-                      <input type="hidden" name="itemId" value={line.itemId} />
-                      <label className="sr-only" htmlFor={`q-${line.itemId}`}>
-                        Количество
-                      </label>
-                      <input
-                        id={`q-${line.itemId}`}
-                        name="quantity"
-                        type="number"
-                        min={1}
-                        defaultValue={line.quantity}
-                        className="w-20 rounded border border-brand-border bg-brand-surface px-2 py-1 text-sm text-brand-heading"
-                      />
-                      <button
-                        type="submit"
-                        className="rounded border border-brand-border px-2 py-1 text-xs text-brand-heading hover:bg-brand-elevated"
-                      >
-                        Обновить
-                      </button>
-                    </form>
-                    <form action={removeCartItem}>
-                      <input type="hidden" name="itemId" value={line.itemId} />
-                      <button
-                        type="submit"
-                        className="text-xs text-red-400 hover:underline"
-                      >
-                        Удалить
-                      </button>
-                    </form>
-                  </div>
+                  <CartItemControls itemId={line.itemId} quantity={line.quantity} />
                 </div>
               </li>
             ))}
