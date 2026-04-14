@@ -53,6 +53,17 @@ export default async function CartPage() {
                   <p className="mt-1 text-sm text-brand">
                     {formatPrice(line.price)} × {line.quantity}
                   </p>
+                  {line.reservedUntil && (
+                    <p className="mt-0.5 text-xs text-brand-muted">
+                      Зарезервировано до{" "}
+                      {line.reservedUntil.toLocaleString("ru-RU", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <form action={updateCartItemQuantity} className="flex items-center gap-2">
                       <input type="hidden" name="itemId" value={line.itemId} />

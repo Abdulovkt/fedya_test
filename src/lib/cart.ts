@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cartItems, carts, products } from "@/db/schema";
+import { releaseExpiredReservations } from "@/lib/reservation";
 
 const CART_COOKIE = "cart_id";
 const CART_MAX_AGE = 60 * 60 * 24 * 30;
@@ -48,9 +49,13 @@ export type CartLine = {
   price: number;
   quantity: number;
   imageUrl: string | null;
+  reservedUntil: Date | null;
 };
 
 export async function getCartLines(): Promise<CartLine[]> {
+  // Release any expired reservations before reading so the cart is always fresh
+  await releaseExpiredReservations();
+
   const cartId = await getCartId();
   if (!cartId) return [];
 
@@ -63,6 +68,7 @@ export async function getCartLines(): Promise<CartLine[]> {
       price: products.price,
       quantity: cartItems.quantity,
       imageUrl: products.imageUrl,
+      reservedUntil: cartItems.reservedUntil,
     })
     .from(cartItems)
     .innerJoin(products, eq(cartItems.productId, products.id))
@@ -76,6 +82,7 @@ export async function getCartLines(): Promise<CartLine[]> {
     price: r.price,
     quantity: r.quantity,
     imageUrl: r.imageUrl,
+    reservedUntil: r.reservedUntil,
   }));
 }
 

@@ -66,6 +66,7 @@ export const cartItems = sqliteTable(
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
     quantity: integer("quantity").notNull(),
+    reservedUntil: integer("reserved_until", { mode: "timestamp_ms" }),
   },
   (t) => ({
     cartProductIdx: uniqueIndex("cart_items_cart_product").on(

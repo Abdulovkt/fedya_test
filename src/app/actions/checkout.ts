@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { cartItems, orderItems, orders } from "@/db/schema";
 import { getCartId, getCartLines } from "@/lib/cart";
+import { releaseExpiredReservations } from "@/lib/reservation";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 const checkoutSchema = z.object({
@@ -40,6 +41,9 @@ export async function placeOrder(
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
+
+  // Release any items whose reservation expired before we read the cart
+  await releaseExpiredReservations();
 
   const cartId = await getCartId();
   if (!cartId) {

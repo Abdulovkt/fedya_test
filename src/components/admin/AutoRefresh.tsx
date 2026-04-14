@@ -1,13 +1,41 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export function AutoRefresh({ intervalMs = 3000 }: { intervalMs?: number }) {
+interface AutoRefreshProps {
+  intervalMs?: number;
+}
+
+export function AutoRefresh({ intervalMs = 5000 }: AutoRefreshProps) {
   const router = useRouter();
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [ticking, setTicking] = useState(false);
+
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), intervalMs);
+    const id = setInterval(() => {
+      setTicking(true);
+      router.refresh();
+      setLastUpdated(new Date());
+      setTimeout(() => setTicking(false), 600);
+    }, intervalMs);
+
     return () => clearInterval(id);
   }, [router, intervalMs]);
-  return null;
+
+  return (
+    <span className="flex items-center gap-1.5 text-xs text-brand-muted">
+      <span
+        className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-300 ${
+          ticking ? "bg-emerald-400" : "bg-brand-muted/40"
+        }`}
+      />
+      Обновлено в{" "}
+      {lastUpdated.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })}
+    </span>
+  );
 }
