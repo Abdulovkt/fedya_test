@@ -10,6 +10,7 @@ export const SETTING_KEYS = [
   "smtp_pass",
   "smtp_from",
   "site_url",
+  "telegram_url",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -32,6 +33,7 @@ export async function getSettings(): Promise<EmailSettings> {
     smtp_pass: map.smtp_pass ?? process.env.SMTP_PASS ?? "",
     smtp_from: map.smtp_from ?? process.env.SMTP_FROM ?? "",
     site_url: map.site_url ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    telegram_url: map.telegram_url ?? process.env.NEXT_PUBLIC_TELEGRAM_URL ?? "",
   };
 }
 

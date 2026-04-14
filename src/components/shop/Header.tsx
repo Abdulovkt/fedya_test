@@ -5,6 +5,8 @@ import { categories } from "@/db/schema";
 import { asc } from "drizzle-orm";
 import { getCartItemCount } from "@/lib/cart";
 import { SearchBar } from "@/components/shop/SearchBar";
+import { getSettings } from "@/lib/settings";
+import { CartIcon, TelegramIcon } from "@/components/shop/HeaderIcons";
 
 export async function Header() {
   const cats = await db
@@ -12,6 +14,7 @@ export async function Header() {
     .from(categories)
     .orderBy(asc(categories.sortOrder), asc(categories.name));
   const cartCount = await getCartItemCount();
+  const { telegram_url } = await getSettings();
 
   return (
     <header className="sticky top-0 z-40 border-b border-brand-border bg-brand-surface/95 shadow-sm backdrop-blur">
@@ -30,17 +33,10 @@ export async function Header() {
             </Suspense>
           </div>
 
-          <Link
-            href="/cart"
-            className="relative rounded-lg border border-brand-border bg-brand-elevated px-3 py-1.5 text-sm font-medium text-brand-heading shadow-sm hover:border-brand/40"
-          >
-            Корзина
-            {cartCount > 0 ? (
-              <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-semibold text-white">
-                {cartCount}
-              </span>
-            ) : null}
-          </Link>
+          <div className="flex items-center gap-3">
+            <TelegramIcon url={telegram_url} />
+            <CartIcon count={cartCount} />
+          </div>
         </div>
 
         <nav className="mt-2 flex flex-wrap items-center gap-2 text-sm">

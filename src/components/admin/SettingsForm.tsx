@@ -36,6 +36,18 @@ export function SettingsForm({ current }: { current: EmailSettings }) {
         />
       </section>
 
+      {/* Telegram */}
+      <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-brand-heading">Telegram</h2>
+        <Field
+          name="telegram_url"
+          label="Ссылка на Telegram-канал"
+          hint="Отображается как иконка в шапке сайта (например https://t.me/yourchannel)"
+          defaultValue={current.telegram_url}
+          placeholder="https://t.me/yourchannel"
+        />
+      </section>
+
       {/* SMTP */}
       <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-brand-heading">SMTP — исходящая почта</h2>
