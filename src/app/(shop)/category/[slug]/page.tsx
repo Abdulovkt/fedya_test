@@ -45,6 +45,7 @@ export default async function CategoryPage({ params }: Props) {
             slug={p.slug}
             price={p.price}
             imageUrl={p.imageUrl}
+            stock={p.stock}
             categoryName={cat.name}
           />
         ))}

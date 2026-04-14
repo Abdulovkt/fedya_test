@@ -59,7 +59,6 @@ export function ProductForm({ categories, mode, product }: Props) {
   return (
     <form
       action={mode === "edit" ? editAction : createProduct}
-      encType="multipart/form-data"
       className="max-w-xl space-y-4 rounded-xl border border-brand-border bg-brand-surface/40 p-6"
     >
       {/* Toast notification */}

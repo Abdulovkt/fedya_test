@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { addToCart } from "@/app/actions/cart";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, getStockLabel } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -35,6 +35,7 @@ export default async function ProductPage({ params }: Props) {
   if (!row || !row.product.isActive) notFound();
 
   const p = row.product;
+  const stockLabel = getStockLabel(p.stock);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -76,11 +77,16 @@ export default async function ProductPage({ params }: Props) {
           <p className="mt-4 text-3xl font-bold text-brand">
             {formatPrice(p.price)}
           </p>
-          {p.stock <= 0 ? (
-            <p className="mt-4 text-sm text-red-400">Нет в наличии</p>
-          ) : (
-            <p className="mt-4 text-sm text-brand-muted">В наличии: {p.stock} шт.</p>
-          )}
+          <div className="mt-4 flex items-center gap-3">
+            <span
+              className={`rounded-full px-3 py-1 text-sm font-medium ${stockLabel.className}`}
+            >
+              {stockLabel.text}
+            </span>
+            {p.stock > 0 && (
+              <span className="text-sm text-brand-muted">{p.stock} шт.</span>
+            )}
+          </div>
           {p.description ? (
             <div className="prose prose-neutral mt-6 max-w-none text-brand-muted prose-p:leading-relaxed">
               <p className="whitespace-pre-wrap">{p.description}</p>

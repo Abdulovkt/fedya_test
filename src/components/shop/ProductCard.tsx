@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { addToCart } from "@/app/actions/cart";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, getStockLabel } from "@/lib/format";
 
 type Props = {
   id: number;
@@ -9,6 +9,7 @@ type Props = {
   slug: string;
   price: number;
   imageUrl: string | null;
+  stock: number;
   categoryName?: string;
 };
 
@@ -18,8 +19,11 @@ export function ProductCard({
   slug,
   price,
   imageUrl,
+  stock,
   categoryName,
 }: Props) {
+  const stockLabel = getStockLabel(stock);
+
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-md shadow-black/5">
       <Link
@@ -52,11 +56,17 @@ export function ProductCard({
           </h3>
         </Link>
         <p className="text-lg font-bold text-brand">{formatPrice(price)}</p>
+        <span
+          className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
+        >
+          {stockLabel.text}
+        </span>
         <form action={addToCart} className="mt-auto">
           <input type="hidden" name="productId" value={id} />
           <button
             type="submit"
-            className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
+            disabled={stock <= 0}
+            className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             В корзину
           </button>

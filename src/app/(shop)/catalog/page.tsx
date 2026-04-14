@@ -25,6 +25,7 @@ export default async function CatalogPage({
       slug: products.slug,
       price: products.price,
       imageUrl: products.imageUrl,
+      stock: products.stock,
       categoryName: categories.name,
     })
     .from(products)
@@ -62,6 +63,7 @@ export default async function CatalogPage({
               slug={p.slug}
               price={p.price}
               imageUrl={p.imageUrl}
+              stock={p.stock}
               categoryName={p.categoryName}
             />
           ))}
