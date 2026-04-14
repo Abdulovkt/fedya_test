@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getSettings } from "@/lib/settings";
+import { getStatusMeta } from "@/lib/order-statuses";
 
 async function getTransporter() {
   const s = await getSettings();
@@ -49,6 +50,67 @@ export async function sendOrderConfirmationEmail({
         <h2 style="color:#e02c5c">Спасибо за заказ, ${customerName}!</h2>
         <p>Ваш заказ <strong>#${orderId}</strong> успешно принят. Мы свяжемся с вами в ближайшее время.</p>
         <p>Если у вас есть вопросы — напишите нам в чат прямо сейчас:</p>
+        <a href="${chatUrl}"
+           style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
+          Открыть чат с магазином
+        </a>
+        <p style="margin-top:24px;font-size:13px;color:#7d879c">
+          Ссылка на чат привязана к вашему заказу и действует постоянно.
+        </p>
+      </div>
+    `,
+  });
+}
+
+export async function sendOrderStatusEmail({
+  to,
+  customerName,
+  orderId,
+  chatToken,
+  status,
+  message,
+}: {
+  to: string;
+  customerName: string;
+  orderId: number;
+  chatToken: string;
+  status: string;
+  message?: string;
+}) {
+  const transporter = await getTransporter();
+  if (!transporter) return;
+
+  const siteUrl = await getSiteUrl();
+  const from = await getFrom();
+  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
+  const statusMeta = getStatusMeta(status);
+
+  const statusColors: Record<string, string> = {
+    new:        "#3b82f6",
+    processing: "#f59e0b",
+    assembled:  "#8b5cf6",
+    shipped:    "#f97316",
+    delivered:  "#22c55e",
+    cancelled:  "#ef4444",
+  };
+  const color = statusColors[status] ?? "#e02c5c";
+
+  await transporter.sendMail({
+    from: `"SportNutrition" <${from}>`,
+    to,
+    subject: `Заказ #${orderId} — статус изменён на «${statusMeta.label}»`,
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
+        <h2 style="color:#e02c5c">Обновление по заказу #${orderId}</h2>
+        <p>Здравствуйте, <strong>${customerName}</strong>!</p>
+        <p>Статус вашего заказа изменился:</p>
+        <div style="display:inline-block;margin:16px 0;padding:10px 22px;background:${color}1a;border:1px solid ${color}4d;border-radius:999px;font-size:15px;font-weight:600;color:${color}">
+          ${statusMeta.label}
+        </div>
+        ${message ? `
+        <div style="margin:20px 0;padding:14px 18px;background:#f8f9fc;border-left:4px solid ${color};border-radius:4px;font-size:14px;color:#1d2a38;white-space:pre-wrap">${message}</div>
+        ` : ""}
+        <p style="margin-top:8px">Если у вас есть вопросы — вы можете написать нам прямо сейчас:</p>
         <a href="${chatUrl}"
            style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
           Открыть чат с магазином

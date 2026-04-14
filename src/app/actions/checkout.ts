@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
@@ -91,6 +92,11 @@ export async function placeOrder(
   );
 
   await db.delete(cartItems).where(eq(cartItems.cartId, cartId));
+
+  revalidatePath("/");
+  revalidatePath("/cart");
+  revalidatePath("/catalog");
+  revalidatePath("/admin/products");
 
   // Send confirmation email with chat link (non-blocking)
   sendOrderConfirmationEmail({

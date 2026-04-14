@@ -10,6 +10,8 @@ import { db } from "@/db";
 import { categories, orders, products } from "@/db/schema";
 import { slugify } from "@/lib/format";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
+import { STATUS_VALUES } from "@/lib/order-statuses";
+import { sendOrderStatusEmail } from "@/lib/email";
 
 async function requireAdmin() {
   const session = await auth();
@@ -195,11 +197,40 @@ export async function updateOrderStatus(formData: FormData) {
   const id = Number(formData.get("orderId"));
   const status = String(formData.get("status") ?? "");
   if (!Number.isFinite(id)) return;
-  if (!["new", "processing", "shipped"].includes(status)) return;
+  if (!(STATUS_VALUES as readonly string[]).includes(status)) return;
+
+  // Fetch order before update to get customer details and skip if status unchanged
+  const [order] = await db
+    .select({
+      status: orders.status,
+      email: orders.email,
+      customerName: orders.customerName,
+      chatToken: orders.chatToken,
+    })
+    .from(orders)
+    .where(eq(orders.id, id))
+    .limit(1);
+
+  if (!order || order.status === status) return;
+
   await db
     .update(orders)
     .set({ status, updatedAt: new Date() })
     .where(eq(orders.id, id));
+
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
+
+  // Send notification email to customer (non-blocking)
+  if (order.chatToken) {
+    const message = formData.get("message")?.toString().trim() || undefined;
+    sendOrderStatusEmail({
+      to: order.email,
+      customerName: order.customerName,
+      orderId: id,
+      chatToken: order.chatToken,
+      status,
+      message,
+    }).catch(() => {});
+  }
 }

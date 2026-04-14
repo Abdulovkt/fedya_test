@@ -1,18 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { updateOrderStatus } from "@/app/actions/admin";
 import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
+import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 
 type Props = { params: Promise<{ id: string }> };
-
-const statusLabel: Record<string, string> = {
-  new: "Новый",
-  processing: "В работе",
-  shipped: "Отправлен",
-};
 
 export default async function AdminOrderDetailPage({ params }: Props) {
   const { id } = await params;
@@ -55,25 +49,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       </p>
 
       <div className="mt-6 rounded-xl border border-brand-border bg-brand-surface/40 p-5">
-        <h2 className="text-sm font-semibold text-brand-muted">Статус</h2>
-        <form action={updateOrderStatus} className="mt-2 flex flex-wrap items-center gap-3">
-          <input type="hidden" name="orderId" value={order.id} />
-          <select
-            name="status"
-            defaultValue={order.status}
-            className="rounded border border-brand-border bg-brand-surface px-2 py-1.5 text-sm text-brand-heading"
-          >
-            <option value="new">{statusLabel.new}</option>
-            <option value="processing">{statusLabel.processing}</option>
-            <option value="shipped">{statusLabel.shipped}</option>
-          </select>
-          <button
-            type="submit"
-            className="rounded bg-brand px-3 py-1.5 text-sm font-semibold text-white"
-          >
-            Сохранить
-          </button>
-        </form>
+        <OrderStatusChanger orderId={order.id} current={order.status} />
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

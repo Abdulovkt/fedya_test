@@ -2,6 +2,8 @@
 
 import { Fragment, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import { getStatusMeta } from "@/lib/order-statuses";
+import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 
 type OrderItem = {
   productName: string;
@@ -23,18 +25,6 @@ type Order = {
   items: OrderItem[];
 };
 
-const statusLabel: Record<string, string> = {
-  new: "Новый",
-  processing: "В работе",
-  shipped: "Отправлен",
-};
-
-const statusColor: Record<string, string> = {
-  new: "bg-blue-50 text-blue-700 border-blue-200",
-  processing: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  shipped: "bg-green-50 text-green-700 border-green-200",
-};
-
 export function OrdersTable({ orders }: { orders: Order[] }) {
   const [openId, setOpenId] = useState<number | null>(null);
 
@@ -54,6 +44,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
         <tbody>
           {orders.map((o) => {
             const isOpen = openId === o.id;
+            const meta = getStatusMeta(o.status);
             return (
               <Fragment key={o.id}>
                 <tr
@@ -83,9 +74,9 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColor[o.status] ?? "bg-brand-elevated text-brand-muted"}`}
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${meta.color}`}
                     >
-                      {statusLabel[o.status] ?? o.status}
+                      {meta.label}
                     </span>
                   </td>
                 </tr>
@@ -93,6 +84,9 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                 {isOpen && (
                   <tr className="border-t border-brand-border bg-brand-elevated">
                     <td colSpan={6} className="px-6 py-5">
+                      <div className="mb-6">
+                        <OrderStatusChanger orderId={o.id} current={o.status} />
+                      </div>
                       <div className="grid gap-6 sm:grid-cols-2">
                         {/* Customer info */}
                         <div>
