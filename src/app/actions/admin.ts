@@ -11,7 +11,7 @@ import { categories, orders, products } from "@/db/schema";
 import { slugify } from "@/lib/format";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
 import { STATUS_VALUES } from "@/lib/order-statuses";
-import { sendOrderStatusEmail } from "@/lib/email";
+import { sendOrderStatusEmail, verifyEmailTransport } from "@/lib/email";
 
 async function requireAdmin() {
   const session = await auth();
@@ -177,7 +177,11 @@ export async function saveEmailSettings(
       SETTING_KEYS.map((k) => [k, (formData.get(k) as string | null) ?? ""]),
     ) as Record<SettingKey, string>;
     await saveSettings(data);
+    const verifyResult = await verifyEmailTransport();
     revalidatePath("/admin/settings");
+    if (!verifyResult.ok) {
+      return { error: `Настройки сохранены, но SMTP недоступен: ${verifyResult.error}` };
+    }
     return { ok: true };
   } catch {
     return { error: "Не удалось сохранить настройки" };

@@ -10,6 +10,8 @@ async function getTransporter() {
     port: Number(s.smtp_port) || 587,
     secure: s.smtp_secure === "true",
     auth: { user: s.smtp_user, pass: s.smtp_pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
   });
 }
 
@@ -20,7 +22,14 @@ async function getSiteUrl() {
 
 async function getFrom() {
   const s = await getSettings();
-  return s.smtp_from || s.smtp_user || "noreply@example.com";
+  const smtpFrom = s.smtp_from.trim();
+  const smtpUser = s.smtp_user.trim();
+
+  // smtp_from may be a full mailbox string: "Shop" <info@example.com>
+  if (smtpFrom.includes("<") && smtpFrom.includes(">")) return smtpFrom;
+  if (smtpFrom) return `"SportNutrition" <${smtpFrom}>`;
+  if (smtpUser) return `"SportNutrition" <${smtpUser}>`;
+  return `"SportNutrition" <noreply@example.com>`;
 }
 
 export async function sendOrderConfirmationEmail({
@@ -42,7 +51,7 @@ export async function sendOrderConfirmationEmail({
   const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
 
   await transporter.sendMail({
-    from: `"SportNutrition" <${from}>`,
+    from,
     to,
     subject: `Заказ #${orderId} оформлен — SportNutrition`,
     html: `
@@ -60,6 +69,35 @@ export async function sendOrderConfirmationEmail({
       </div>
     `,
   });
+}
+
+export async function verifyEmailTransport(): Promise<{ ok: true } | { ok: false; error: string }> {
+  const s = await getSettings();
+  const transporter = await getTransporter();
+  if (!transporter) {
+    return { ok: false, error: "Не заполнены SMTP логин и пароль" };
+  }
+
+  try {
+    await transporter.verify();
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Неизвестная ошибка SMTP";
+    const host = s.smtp_host || "smtp.gmail.com";
+    const port = Number(s.smtp_port) || 587;
+    const secure = s.smtp_secure === "true";
+
+    if (message.includes("Greeting never received")) {
+      return {
+        ok: false,
+        error:
+          `SMTP не ответил на приветствие (host=${host}, port=${port}, secure=${secure}). ` +
+          "Обычно причина в неверной паре порт/SSL: для 465 нужен secure=true, для 587 — secure=false.",
+      };
+    }
+
+    return { ok: false, error: message };
+  }
 }
 
 export async function sendOrderStatusEmail({
@@ -96,7 +134,7 @@ export async function sendOrderStatusEmail({
   const color = statusColors[status] ?? "#e02c5c";
 
   await transporter.sendMail({
-    from: `"SportNutrition" <${from}>`,
+    from,
     to,
     subject: `Заказ #${orderId} — статус изменён на «${statusMeta.label}»`,
     html: `
@@ -144,7 +182,7 @@ export async function sendNewMessageEmail({
   const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
 
   await transporter.sendMail({
-    from: `"SportNutrition" <${from}>`,
+    from,
     to,
     subject: `Новое сообщение по заказу #${orderId}`,
     html: `
