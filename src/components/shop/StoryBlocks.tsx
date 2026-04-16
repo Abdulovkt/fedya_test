@@ -1,17 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type StoryBlock = {
   tab: string;
   title: string;
   paragraphs: string[];
+  imageUrl?: string;
+  imageAlt?: string;
 };
 
 const STORY_BLOCKS: StoryBlock[] = [
   {
     tab: "Exchange",
     title: "FedorPharm - гарантия высокого качества!",
+    imageUrl: "/story/1.png",
+    imageAlt: "FedorPharm - гарантия качества",
     paragraphs: [
       "FedorPharm - молодая и амбициозная компания, основная цель которой заключается в поставке качественных стероидов по умеренным ценам.",
       "Наш каталог продукции включает широкий ассортимент препаратов от самых известных мировых производителей, что позволяет абсолютно каждому подобрать подходящий курс для себя.",
@@ -22,6 +27,8 @@ const STORY_BLOCKS: StoryBlock[] = [
   {
     tab: "Send",
     title: "Разрушаем мифы о стероидах",
+    imageUrl: "/story/2.png",
+    imageAlt: "Разрушаем мифы о стероидах",
     paragraphs: [
       "Вокруг анаболических стероидов сложилось множество мифов - от историй, рассказанных знакомыми, до материалов из телевизионных передач. Часто можно услышать о вреде для внутренних органов, угнетении собственных гормонов и прочих ужасах. Важно понимать: критические последствия для здоровья чаще всего наступают не от самих стероидов, а от их бесконтрольного применения в диких дозировках, замешанного на незнании фармакологии.",
       "Анаболики - это серьезный инструмент, требующий осознанного подхода. Прежде чем бежать за курсом, основываясь на советах \"бывалых\" из тренажерного зала, необходимо самостоятельно изучить вопрос, понять принципы действия и возможные риски. Только при грамотном подходе ваш организм отреагирует положительно, позволяя чувствовать себя превосходно как физически, так и эстетически. Купить анаболические стероиды имеет смысл только тогда, когда вы полностью разобрались в этой теме.",
@@ -30,6 +37,8 @@ const STORY_BLOCKS: StoryBlock[] = [
   {
     tab: "Top up",
     title: "О нашей продукции",
+    imageUrl: "/story/3.png",
+    imageAlt: "О нашей продукции",
     paragraphs: [
       "Анаболические стероиды - это соединения, которые позволяют спортсмену выйти на новый уровень, ускоряя синтез белка и способствуя быстрому набору качественной мышечной массы. Результат их применения - не только эстетичное, рельефное тело, но и взрывной рост силовых показателей и выносливости.",
       "Современная фармакология позволяет добиться впечатляющих результатов в сжатые сроки. Вам больше не нужно проводить долгие годы в \"застое\", чтобы обрести фигуру мечты или избавиться от лишнего жира. Достаточно составить грамотный, эффективный курс, подкрепить его интенсивным тренингом и сбалансированным питанием - и прогресс не заставит себя ждать.",
@@ -38,6 +47,8 @@ const STORY_BLOCKS: StoryBlock[] = [
   {
     tab: "Convert",
     title: "Наш ассортимент и преимущества",
+    imageUrl: "/story/4.png",
+    imageAlt: "Наш ассортимент и преимущества",
     paragraphs: [
       "В каталоге FedorPharm представлен обширный выбор препаратов как для профессиональных атлетов, так и для новичков. Мы сотрудничаем исключительно с проверенными производителями (SP Laboratories, Pharmacom, ERGO, Balkan Pharmaceuticals, ZPHC и др.). Мы гарантируем, что вся продукция является оригинальной, имеет сертификаты качества и уникальные коды проверки. У нас можно купить стероиды по цене, которая вас приятно удивит.",
     ],
@@ -45,6 +56,8 @@ const STORY_BLOCKS: StoryBlock[] = [
   {
     tab: "Benefits",
     title: "Почему выбирают FedorPharm?",
+    imageUrl: "/story/5.png",
+    imageAlt: "Почему выбирают FedorPharm",
     paragraphs: [
       "Наш магазин молод, но мы уже зарекомендовали себя как надежный партнер среди всех проверенных площадок России. Мы строим работу на качестве и индивидуальном подходе, поэтому недовольных клиентов у нас не бывает. Обращаясь к нам, вы получаете:",
       "Широкий выбор высокоэффективных препаратов.",
@@ -105,25 +118,46 @@ export function StoryBlocks() {
           </div>
         </div>
 
-        <div className="relative border-l border-brand/10 bg-gradient-to-br from-[#fbfdff] to-[#ecf5ff] p-5">
-          <div className="absolute right-4 top-3 text-6xl font-black leading-none text-brand/10">{idx + 1}</div>
-          <div className="relative mt-8 rounded-xl border border-brand/25 bg-white p-3 shadow-sm">
-            <div className="h-3 w-16 rounded-full bg-brand/25" />
-            <div className="mt-3 space-y-2">
-              <div className="h-2 w-full rounded-full bg-brand/10" />
-              <div className="h-2 w-5/6 rounded-full bg-brand/10" />
-              <div className="h-2 w-3/4 rounded-full bg-brand/10" />
-            </div>
-          </div>
-          <div className="mt-4 rounded-xl border border-brand/15 bg-white p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="h-16 rounded-md bg-brand/8" />
-              <div className="h-16 rounded-md bg-brand/8" />
-              <div className="col-span-2 h-20 rounded-md bg-brand/10" />
-            </div>
-          </div>
-          <div className="mt-4 h-2 w-full rounded-full bg-brand/10" />
-          <div className="mt-2 h-2 w-4/5 rounded-full bg-brand/10" />
+        <div
+          className={
+            block.imageUrl
+              ? "relative overflow-hidden border-l border-brand/10 bg-gradient-to-br from-[#fbfdff] to-[#ecf5ff]"
+              : "relative border-l border-brand/10 bg-gradient-to-br from-[#fbfdff] to-[#ecf5ff] p-5"
+          }
+        >
+          <div className="absolute right-4 top-3 z-20 text-6xl font-black leading-none text-brand/10">{idx + 1}</div>
+          {block.imageUrl ? (
+            <>
+              <Image
+                src={block.imageUrl}
+                alt={block.imageAlt || block.title}
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 280px, 40vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="relative mt-8 rounded-xl border border-brand/25 bg-white p-3 shadow-sm">
+                <div className="h-3 w-16 rounded-full bg-brand/25" />
+                <div className="mt-3 space-y-2">
+                  <div className="h-2 w-full rounded-full bg-brand/10" />
+                  <div className="h-2 w-5/6 rounded-full bg-brand/10" />
+                  <div className="h-2 w-3/4 rounded-full bg-brand/10" />
+                </div>
+              </div>
+              <div className="mt-4 rounded-xl border border-brand/15 bg-white p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-16 rounded-md bg-brand/8" />
+                  <div className="h-16 rounded-md bg-brand/8" />
+                  <div className="col-span-2 h-20 rounded-md bg-brand/10" />
+                </div>
+              </div>
+              <div className="mt-4 h-2 w-full rounded-full bg-brand/10" />
+              <div className="mt-2 h-2 w-4/5 rounded-full bg-brand/10" />
+            </>
+          )}
         </div>
       </div>
     );
