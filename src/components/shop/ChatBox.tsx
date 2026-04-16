@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MessageText } from "@/components/chat/MessageText";
 
 type Message = {
   id: number;
@@ -12,8 +13,10 @@ type Message = {
 export function ChatBox({ orderId, token }: { orderId: number; token: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchMessages() {
     const res = await fetch(`/api/chat/${orderId}?token=${token}`);
@@ -33,14 +36,26 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim() || sending) return;
+    if ((!text.trim() && !attachment) || sending) return;
     setSending(true);
-    await fetch(`/api/chat/${orderId}?token=${token}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text.trim() }),
-    });
+    if (attachment) {
+      const fd = new FormData();
+      if (text.trim()) fd.set("text", text.trim());
+      fd.set("attachment", attachment);
+      await fetch(`/api/chat/${orderId}?token=${token}`, {
+        method: "POST",
+        body: fd,
+      });
+    } else {
+      await fetch(`/api/chat/${orderId}?token=${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+    }
     setText("");
+    setAttachment(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     await fetchMessages();
     setSending(false);
   }
@@ -82,7 +97,7 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
                     ? "rounded-tr-sm bg-brand text-white"
                     : "rounded-tl-sm bg-white text-brand-heading border border-brand-border/50"
                 }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                  <MessageText text={m.text} isDark={isMe} />
                   <p className={`mt-1 text-right text-[11px] ${isMe ? "text-white/60" : "text-brand-muted/60"}`}>
                     {new Date(m.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -95,7 +110,23 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
       </div>
 
       {/* Input */}
-      <form onSubmit={send} className="flex items-center gap-2 border-t border-brand-border bg-brand-surface px-3 py-3">
+      <form onSubmit={send} className="border-t border-brand-border bg-brand-surface px-3 py-3">
+        {attachment && (
+          <div className="mb-2 flex items-center justify-between rounded-lg border border-brand-border bg-brand-elevated px-3 py-2 text-xs text-brand-muted">
+            <span className="truncate pr-2">Чек: {attachment.name}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAttachment(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+              className="text-brand hover:underline"
+            >
+              Убрать
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -103,14 +134,33 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
           placeholder="Сообщение…"
           className="flex-1 rounded-xl border border-brand-border bg-brand-elevated px-4 py-2 text-sm text-brand-heading outline-none focus:border-brand/50"
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            setAttachment(file);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="rounded-full border border-brand-border p-2 text-brand-muted hover:border-brand/40 hover:text-brand"
+          aria-label="Прикрепить чек"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-8.49 8.49a6 6 0 0 1-8.49-8.49l8.49-8.49a4 4 0 0 1 5.66 5.66l-8.5 8.48a2 2 0 1 1-2.82-2.82l7.79-7.78"/></svg>
+        </button>
         <button
           type="submit"
-          disabled={sending || !text.trim()}
+          disabled={sending || (!text.trim() && !attachment)}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-hover disabled:opacity-40"
           aria-label="Отправить"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
+        </div>
       </form>
     </div>
   );

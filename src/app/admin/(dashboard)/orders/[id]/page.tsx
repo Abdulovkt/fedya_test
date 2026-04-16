@@ -49,7 +49,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       </p>
 
       <div className="mt-6 rounded-xl border border-brand-border bg-brand-surface/40 p-5">
-        <OrderStatusChanger orderId={order.id} current={order.status} />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <OrderStatusChanger orderId={order.id} current={order.status} />
+          <Link
+            href={`/admin/chats/${order.id}`}
+            className="rounded-lg border border-brand-border px-3 py-1.5 text-sm font-medium text-brand hover:border-brand/40 hover:bg-brand hover:text-white"
+          >
+            Открыть чат
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

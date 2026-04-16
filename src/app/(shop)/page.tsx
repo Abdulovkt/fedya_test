@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { StoryBlocks } from "@/components/shop/StoryBlocks";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 
@@ -76,6 +77,8 @@ export default async function HomePage() {
           ))}
         </ul>
       </section>
+
+      <StoryBlocks />
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between gap-4">

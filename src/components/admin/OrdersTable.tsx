@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { getStatusMeta } from "@/lib/order-statuses";
@@ -84,8 +85,14 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                 {isOpen && (
                   <tr className="border-t border-brand-border bg-brand-elevated">
                     <td colSpan={6} className="px-6 py-5">
-                      <div className="mb-6">
+                      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
                         <OrderStatusChanger orderId={o.id} current={o.status} />
+                        <Link
+                          href={`/admin/chats/${o.id}`}
+                          className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium text-brand hover:border-brand/40 hover:bg-brand hover:text-white"
+                        >
+                          Открыть чат
+                        </Link>
                       </div>
                       <div className="grid gap-6 sm:grid-cols-2">
                         {/* Customer info */}

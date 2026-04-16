@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { markChatAsRead } from "@/app/actions/admin";
+import { MessageText } from "@/components/chat/MessageText";
 
 type Message = {
   id: number;
@@ -93,7 +94,7 @@ export function AdminChatBox({
                     ? "rounded-tr-sm bg-brand text-white"
                     : "rounded-tl-sm bg-white text-brand-heading border border-brand-border/50"
                 }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                  <MessageText text={m.text} isDark={isAdmin} />
                   <p className={`mt-1 text-right text-[11px] ${isAdmin ? "text-white/60" : "text-brand-muted/60"}`}>
                     {new Date(m.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                   </p>

@@ -9,10 +9,11 @@ interface AutoRefreshProps {
 
 export function AutoRefresh({ intervalMs = 5000 }: AutoRefreshProps) {
   const router = useRouter();
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [ticking, setTicking] = useState(false);
 
   useEffect(() => {
+    setLastUpdated(new Date());
     const id = setInterval(() => {
       setTicking(true);
       router.refresh();
@@ -31,11 +32,15 @@ export function AutoRefresh({ intervalMs = 5000 }: AutoRefreshProps) {
         }`}
       />
       Обновлено в{" "}
-      {lastUpdated.toLocaleTimeString("ru-RU", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })}
+      <span suppressHydrationWarning>
+        {lastUpdated
+          ? lastUpdated.toLocaleTimeString("ru-RU", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })
+          : "--:--:--"}
+      </span>
     </span>
   );
 }

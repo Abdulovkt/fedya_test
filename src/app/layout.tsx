@@ -36,8 +36,12 @@ export default function RootLayout({
     <html
       lang="ru"
       className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-brand-bg text-brand-muted">
+      <body
+        className="flex min-h-full flex-col bg-brand-bg text-brand-muted"
+        suppressHydrationWarning
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

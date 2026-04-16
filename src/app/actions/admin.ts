@@ -7,10 +7,10 @@ import path from "path";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { categories, orders, products } from "@/db/schema";
+import { categories, chatMessages, orders, products } from "@/db/schema";
 import { slugify } from "@/lib/format";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
-import { STATUS_VALUES } from "@/lib/order-statuses";
+import { STATUS_VALUES, getStatusMeta } from "@/lib/order-statuses";
 import { sendOrderStatusEmail, verifyEmailTransport } from "@/lib/email";
 
 async function requireAdmin() {
@@ -200,6 +200,7 @@ export async function updateOrderStatus(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("orderId"));
   const status = String(formData.get("status") ?? "");
+  const message = formData.get("message")?.toString().trim() || "";
   if (!Number.isFinite(id)) return;
   if (!(STATUS_VALUES as readonly string[]).includes(status)) return;
 
@@ -222,19 +223,30 @@ export async function updateOrderStatus(formData: FormData) {
     .set({ status, updatedAt: new Date() })
     .where(eq(orders.id, id));
 
+  if (message) {
+    const statusMeta = getStatusMeta(status);
+    const chatMessageText = `Статус заказа изменён на «${statusMeta.label}».\n${message}`;
+    await db.insert(chatMessages).values({
+      orderId: id,
+      sender: "admin",
+      text: chatMessageText,
+    });
+  }
+
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/admin/chats");
+  revalidatePath(`/admin/chats/${id}`);
 
   // Send notification email to customer (non-blocking)
   if (order.chatToken) {
-    const message = formData.get("message")?.toString().trim() || undefined;
     sendOrderStatusEmail({
       to: order.email,
       customerName: order.customerName,
       orderId: id,
       chatToken: order.chatToken,
       status,
-      message,
+      message: message || undefined,
     }).catch(() => {});
   }
 }
