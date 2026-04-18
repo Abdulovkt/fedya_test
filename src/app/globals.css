@@ -28,3 +28,29 @@ body {
   color: var(--foreground);
   font-family: var(--font-montserrat), var(--font-geist-sans), system-ui, sans-serif;
 }
+
+.reveal {
+  opacity: 0;
+  transform: translateX(var(--reveal-x, 18px));
+  filter: blur(0.2px);
+  transition:
+    opacity var(--reveal-duration, 1400ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1)),
+    transform var(--reveal-duration, 1400ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1)),
+    filter var(--reveal-duration, 1400ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1));
+  will-change: opacity, transform;
+}
+
+.reveal--in {
+  opacity: 1;
+  transform: translateX(0);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}

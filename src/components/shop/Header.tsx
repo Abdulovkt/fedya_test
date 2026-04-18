@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { db } from "@/db";
@@ -22,9 +23,17 @@ export async function Header() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/"
-            className="text-xl font-bold tracking-tight text-brand"
+            className="relative flex h-10 w-[138px] items-center"
+            aria-label="FedorPharm"
           >
-            SportNutrition
+            <Image
+              src="/logo-black.png"
+              alt="FedorPharm"
+              fill
+              priority
+              className="object-contain"
+              sizes="138px"
+            />
           </Link>
 
           <div className="flex-1">
