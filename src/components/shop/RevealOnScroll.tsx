@@ -25,6 +25,10 @@ type Props = {
   durationMs?: number;
   /** CSS easing for reveal transitions */
   easing?: string;
+  /** IntersectionObserver threshold (0..1) */
+  threshold?: number;
+  /** IntersectionObserver rootMargin */
+  rootMargin?: string;
 };
 
 function composeRefs<T>(a: Ref<T> | undefined, b: Ref<T> | undefined): Ref<T> {
@@ -42,8 +46,10 @@ export function RevealOnScroll({
   className,
   x = 18,
   delayMs = 0,
-  durationMs = 1400,
+  durationMs = 720,
   easing = "cubic-bezier(0.2, 1, 0.2, 1)",
+  threshold = 0.12,
+  rootMargin = "0px 0px -8% 0px",
 }: Props) {
   const nodeRef = useRef<HTMLElement | null>(null);
   const [inView, setInView] = useState(false);
@@ -62,7 +68,7 @@ export function RevealOnScroll({
           obs.disconnect();
         }
       },
-      { root: null, threshold: 0.22, rootMargin: "0px 0px -18% 0px" },
+      { root: null, threshold, rootMargin },
     );
 
     obs.observe(el);
@@ -70,7 +76,7 @@ export function RevealOnScroll({
       obs.disconnect();
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [delayMs]);
+  }, [delayMs, rootMargin, threshold]);
 
   const childNodes = Children.toArray(children).filter((node) => {
     if (typeof node === "string") return node.trim().length > 0;

@@ -171,14 +171,14 @@ export function StoryBlocks() {
   const activeBlock = STORY_BLOCKS[activeIndex];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
       <div className="hidden lg:block">
         <div className="relative">
           <div className="sticky top-[112px]">
             <div className="pointer-events-none absolute left-[72px] top-2 z-40 rounded-full border border-brand/20 bg-white/90 px-4 py-1 text-xs font-semibold tracking-wide text-brand-muted shadow-sm backdrop-blur">
               {activeBlock.title}
             </div>
-            <div className="relative min-h-[55vh] overflow-hidden">
+            <div className="relative min-h-[50vh] overflow-hidden">
               <div className="pointer-events-none absolute inset-0 z-0">
                 {Array.from({ length: stackLayersCount }).map((_, layer) => (
                   <div
@@ -239,10 +239,10 @@ export function StoryBlocks() {
                   markerRefs.current[idx] = el;
                 }}
                 data-idx={idx}
-                className="h-[62vh]"
+                className="h-[38vh]"
               />
             ))}
-            <div className="h-[58vh]" />
+            <div className="h-[30vh]" />
           </div>
         </div>
       </div>

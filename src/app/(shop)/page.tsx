@@ -61,7 +61,14 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <RevealOnScroll durationMs={1700} easing="cubic-bezier(0.2, 1, 0.2, 1)" x={16}>
+        <RevealOnScroll
+          delayMs={60}
+          durationMs={1050}
+          easing="cubic-bezier(0.2, 1, 0.2, 1)"
+          rootMargin="0px 0px -16% 0px"
+          threshold={0.22}
+          x={16}
+        >
           <h2 className="text-2xl font-bold text-brand-heading">Почему мы</h2>
         </RevealOnScroll>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -71,7 +78,15 @@ export default async function HomePage() {
             "Аккуратная доставка",
             "Поддержка и консультации",
           ].map((t, idx) => (
-            <RevealOnScroll key={t} delayMs={160 + idx * 150} durationMs={1450} easing="cubic-bezier(0.2, 1, 0.2, 1)" x={18}>
+            <RevealOnScroll
+              key={t}
+              delayMs={40 + idx * 22}
+              durationMs={780}
+              easing="cubic-bezier(0.2, 1, 0.2, 1)"
+              rootMargin="0px 0px -14% 0px"
+              threshold={0.2}
+              x={16}
+            >
               <li className="rounded-xl border border-brand-border bg-brand-surface px-4 py-5 text-sm text-brand-muted shadow-sm">
                 {t}
               </li>
@@ -82,7 +97,7 @@ export default async function HomePage() {
 
       <StoryBlocks />
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pt-2 pb-14 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-2xl font-bold text-brand-heading">Новинки</h2>
           <Link
@@ -92,7 +107,7 @@ export default async function HomePage() {
             Весь каталог
           </Link>
         </div>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {newProducts.map((p) => (
             <ProductCard
               key={p.id}
