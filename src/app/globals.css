@@ -43,11 +43,56 @@ body {
   transform: translateX(0);
 }
 
+.reveal-fade {
+  opacity: 0;
+  transition: opacity var(--reveal-duration, 720ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1));
+  will-change: opacity;
+}
+
+.reveal-fade.is-in {
+  opacity: 1;
+}
+
+.reveal-line {
+  opacity: 0;
+  transform: scaleX(0.2);
+  transform-origin: left;
+  transition:
+    opacity var(--reveal-duration, 720ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1)),
+    transform var(--reveal-duration, 720ms) var(--reveal-ease, cubic-bezier(0.2, 1, 0.2, 1));
+  will-change: opacity, transform;
+}
+
+.reveal-line.is-in {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.reveal--hidden-until-active {
+  visibility: hidden;
+}
+
+.reveal--hidden-until-active.reveal--in,
+.reveal--hidden-until-active.is-in {
+  visibility: visible;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;
     transform: none;
     filter: none;
     transition: none;
+  }
+
+  .reveal-fade,
+  .reveal-line {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .reveal--hidden-until-active {
+    visibility: visible;
   }
 }

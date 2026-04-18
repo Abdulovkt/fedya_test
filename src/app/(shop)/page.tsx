@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { RevealOnScroll } from "@/components/shop/RevealOnScroll";
 import { StoryBlocks } from "@/components/shop/StoryBlocks";
+import { WhyUsPanel } from "@/components/shop/WhyUsPanel";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 
@@ -61,38 +61,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <RevealOnScroll
-          delayMs={60}
-          durationMs={1050}
-          easing="cubic-bezier(0.2, 1, 0.2, 1)"
-          rootMargin="0px 0px -16% 0px"
-          threshold={0.22}
-          x={16}
-        >
-          <h2 className="text-2xl font-bold text-brand-heading">Почему мы</h2>
-        </RevealOnScroll>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            "Широкий выбор продукции",
-            "Быстрое оформление заказа",
-            "Аккуратная доставка",
-            "Поддержка и консультации",
-          ].map((t, idx) => (
-            <RevealOnScroll
-              key={t}
-              delayMs={40 + idx * 22}
-              durationMs={780}
-              easing="cubic-bezier(0.2, 1, 0.2, 1)"
-              rootMargin="0px 0px -14% 0px"
-              threshold={0.2}
-              x={16}
-            >
-              <li className="rounded-xl border border-brand-border bg-brand-surface px-4 py-5 text-sm text-brand-muted shadow-sm">
-                {t}
-              </li>
-            </RevealOnScroll>
-          ))}
-        </ul>
+        <WhyUsPanel />
       </section>
 
       <StoryBlocks />
