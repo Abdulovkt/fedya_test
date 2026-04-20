@@ -48,6 +48,34 @@ export function SettingsForm({ current }: { current: EmailSettings }) {
         />
       </section>
 
+      {/* PayPass */}
+      <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-brand-heading">PayPass</h2>
+        <Field
+          name="paypass_api_base_url"
+          label="API base URL"
+          hint="Базовый URL API PayPass (обычно https://paypass.online/api/merch)"
+          defaultValue={current.paypass_api_base_url}
+          placeholder="https://paypass.online/api/merch"
+        />
+        <Field
+          name="paypass_api_key"
+          label="API ключ PayPass"
+          type="password"
+          hint="Используется сервером для создания заявок и проверки статусов оплаты"
+          defaultValue={current.paypass_api_key}
+          placeholder="Bearer API key"
+        />
+        <Field
+          name="paypass_sync_secret"
+          label="Секрет автосинхронизации"
+          type="password"
+          hint="Секрет для защищенного internal endpoint автосинхронизации"
+          defaultValue={current.paypass_sync_secret}
+          placeholder="Random long secret"
+        />
+      </section>
+
       {/* SMTP */}
       <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-brand-heading">SMTP — исходящая почта</h2>

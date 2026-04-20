@@ -83,6 +83,33 @@ function ensurePromoSchema(db: Database.Database) {
       "ALTER TABLE orders ADD COLUMN applied_discount_mode TEXT NOT NULL DEFAULT 'none';",
     );
   }
+  if (!hasColumn(db, "orders", "payment_status")) {
+    db.exec("ALTER TABLE orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'unpaid';");
+  }
+  if (!hasColumn(db, "orders", "payment_failure_reason")) {
+    db.exec("ALTER TABLE orders ADD COLUMN payment_failure_reason TEXT;");
+  }
+  if (!hasColumn(db, "orders", "paypass_public_id")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paypass_public_id TEXT;");
+  }
+  if (!hasColumn(db, "orders", "paypass_client_request_id")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paypass_client_request_id TEXT;");
+  }
+  if (!hasColumn(db, "orders", "paypass_telegram_link")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paypass_telegram_link TEXT;");
+  }
+  if (!hasColumn(db, "orders", "paypass_status")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paypass_status TEXT;");
+  }
+  if (!hasColumn(db, "orders", "paypass_last_checked_at")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paypass_last_checked_at INTEGER;");
+  }
+  if (!hasColumn(db, "orders", "paid_amount")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paid_amount INTEGER;");
+  }
+  if (!hasColumn(db, "orders", "paid_at")) {
+    db.exec("ALTER TABLE orders ADD COLUMN paid_at INTEGER;");
+  }
 }
 
 const sqlite =

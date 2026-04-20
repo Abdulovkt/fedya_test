@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { settings } from "@/db/schema";
 
@@ -11,6 +11,9 @@ export const SETTING_KEYS = [
   "smtp_from",
   "site_url",
   "telegram_url",
+  "paypass_api_base_url",
+  "paypass_api_key",
+  "paypass_sync_secret",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -34,6 +37,10 @@ export async function getSettings(): Promise<EmailSettings> {
     smtp_from: map.smtp_from ?? process.env.SMTP_FROM ?? "",
     site_url: map.site_url ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
     telegram_url: map.telegram_url ?? process.env.NEXT_PUBLIC_TELEGRAM_URL ?? "",
+    paypass_api_base_url:
+      map.paypass_api_base_url ?? process.env.PAYPASS_API_BASE_URL ?? "https://paypass.online/api/merch",
+    paypass_api_key: map.paypass_api_key ?? process.env.PAYPASS_API_KEY ?? "",
+    paypass_sync_secret: map.paypass_sync_secret ?? process.env.PAYPASS_SYNC_SECRET ?? "",
   };
 }
 

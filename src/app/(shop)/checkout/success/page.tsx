@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { orders } from "@/db/schema";
+import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 
 type Props = { searchParams: Promise<{ order?: string; token?: string }> };
 
@@ -6,6 +10,69 @@ export const metadata = { title: "Заказ оформлен" };
 
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const { order, token } = await searchParams;
+  const orderId = Number(order);
+  const canLoadOrder = Number.isFinite(orderId) && token;
+
+  let orderRecord:
+    | {
+        id: number;
+        chatToken: string | null;
+        paymentStatus: string;
+        paymentFailureReason: string | null;
+        paypassTelegramLink: string | null;
+      }
+    | undefined;
+
+  if (canLoadOrder) {
+    [orderRecord] = await db
+      .select({
+        id: orders.id,
+        chatToken: orders.chatToken,
+        paymentStatus: orders.paymentStatus,
+        paymentFailureReason: orders.paymentFailureReason,
+        paypassTelegramLink: orders.paypassTelegramLink,
+      })
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    const isValidToken = Boolean(orderRecord && token && orderRecord.chatToken === token);
+    if (
+      isValidToken &&
+      orderRecord &&
+      (orderRecord.paymentStatus === "pending" || orderRecord.paymentStatus === "unpaid")
+    ) {
+      await syncOrderPaymentStatusById(orderId);
+      [orderRecord] = await db
+        .select({
+          id: orders.id,
+          chatToken: orders.chatToken,
+          paymentStatus: orders.paymentStatus,
+          paymentFailureReason: orders.paymentFailureReason,
+          paypassTelegramLink: orders.paypassTelegramLink,
+        })
+        .from(orders)
+        .where(eq(orders.id, orderId))
+        .limit(1);
+    }
+  }
+
+  const isTokenValid = Boolean(orderRecord && token && orderRecord.chatToken === token);
+  const paymentLink = isTokenValid ? orderRecord.paypassTelegramLink : null;
+  const qrUrl = paymentLink
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(paymentLink)}`
+    : null;
+
+  const paymentMeta =
+    orderRecord?.paymentStatus === "paid"
+      ? { label: "Оплачен", tone: "bg-green-50 border-green-200 text-green-700" }
+      : orderRecord?.paymentStatus === "failed"
+        ? { label: "Оплата отклонена", tone: "bg-red-50 border-red-200 text-red-700" }
+        : orderRecord?.paymentStatus === "pending"
+          ? { label: "Ожидает оплату", tone: "bg-yellow-50 border-yellow-200 text-yellow-700" }
+        : orderRecord?.paymentStatus === "unpaid"
+          ? { label: "Ссылка оплаты готовится", tone: "bg-brand-elevated border-brand-border text-brand-muted" }
+          : null;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
@@ -48,6 +115,54 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
           >
             Открыть чат
           </Link>
+        </div>
+      )}
+
+      {isTokenValid && paymentMeta && (
+        <div className="mt-6 rounded-xl border border-brand-border bg-brand-surface px-5 py-4 text-left">
+          <p className="text-sm font-medium text-brand-heading">Оплата</p>
+          <p
+            className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentMeta.tone}`}
+          >
+            {paymentMeta.label}
+          </p>
+
+          {paymentLink ? (
+            <>
+              <p className="mt-3 text-sm text-brand-muted">
+                Нажмите кнопку ниже или отсканируйте QR-код, чтобы открыть оплату в Telegram-боте.
+              </p>
+              <a
+                href={paymentLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
+              >
+                Открыть оплату в Telegram
+              </a>
+              {qrUrl && (
+                <div className="mt-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qrUrl}
+                    alt="QR код для открытия оплаты в Telegram"
+                    className="mx-auto h-52 w-52 rounded-lg border border-brand-border bg-white p-2"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-brand-muted">
+              Ссылка на оплату пока недоступна. Свяжитесь с менеджером через чат заказа.
+            </p>
+          )}
+
+          {orderRecord?.paymentFailureReason && (
+            <p className="mt-2 text-xs text-brand-muted/80">
+              Причина: {orderRecord.paymentFailureReason}
+            </p>
+          )}
         </div>
       )}
 

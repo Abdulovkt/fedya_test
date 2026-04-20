@@ -29,6 +29,7 @@ import {
   normalizePromoCode,
   type PromoCodeRecord,
 } from "@/lib/promocodes";
+import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 
 async function requireAdmin() {
   const session = await auth();
@@ -401,4 +402,16 @@ export async function updateOrderStatus(formData: FormData) {
       message: message || undefined,
     }).catch(() => {});
   }
+}
+
+export async function syncOrderPaymentStatus(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get("orderId"));
+  if (!Number.isFinite(id)) return;
+
+  await syncOrderPaymentStatusById(id);
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/checkout/success");
 }

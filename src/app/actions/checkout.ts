@@ -11,6 +11,7 @@ import { releaseExpiredReservations } from "@/lib/reservation";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getCartPricing } from "@/lib/pricing";
 import { getPromoValidationError, hasPromoBeenUsedByCustomer } from "@/lib/promocodes";
+import { createPayPassRequest } from "@/lib/paypass";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
@@ -91,6 +92,7 @@ export async function placeOrder(
     .insert(orders)
     .values({
       status: "new",
+      paymentStatus: "pending",
       customerName: parsed.data.customerName,
       phone: parsed.data.phone,
       email: normalizedEmail,
@@ -110,6 +112,38 @@ export async function placeOrder(
 
   if (!order) {
     return { error: "Не удалось создать заказ" };
+  }
+
+  const paypassClientRequestId = `ORDER-${order.id}`;
+  try {
+    const paypass = await createPayPassRequest({
+      amountRub: pricing.finalTotal / 100,
+      clientRequestId: paypassClientRequestId,
+      comment: `Заказ #${order.id}`,
+      clientFio: parsed.data.customerName,
+      clientPhone: parsed.data.phone,
+    });
+    await db
+      .update(orders)
+      .set({
+        paypassPublicId: paypass.publicId,
+        paypassClientRequestId,
+        paypassTelegramLink: paypass.telegramLink,
+        paypassStatus: paypass.status,
+        paypassLastCheckedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, order.id));
+  } catch {
+    await db
+      .update(orders)
+      .set({
+        paymentStatus: "unpaid",
+        paymentFailureReason: "paypass_create_error",
+        paypassClientRequestId,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, order.id));
   }
 
   await db.insert(orderItems).values(

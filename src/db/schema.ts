@@ -123,6 +123,17 @@ export const cartItems = sqliteTable(
 export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   status: text("status").notNull().default("new"),
+  paymentStatus: text("payment_status", {
+    enum: ["unpaid", "pending", "paid", "failed"],
+  }).notNull().default("unpaid"),
+  paymentFailureReason: text("payment_failure_reason"),
+  paypassPublicId: text("paypass_public_id"),
+  paypassClientRequestId: text("paypass_client_request_id"),
+  paypassTelegramLink: text("paypass_telegram_link"),
+  paypassStatus: text("paypass_status"),
+  paypassLastCheckedAt: integer("paypass_last_checked_at", { mode: "timestamp_ms" }),
+  paidAmount: integer("paid_amount"),
+  paidAt: integer("paid_at", { mode: "timestamp_ms" }),
   customerName: text("customer_name").notNull(),
   phone: text("phone").notNull(),
   email: text("email").notNull(),

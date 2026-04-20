@@ -6,6 +6,8 @@ import { orderItems, orders, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
 import { getPricingFromStoredOrder } from "@/lib/pricing";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
+import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
+import { syncOrderPaymentStatus } from "@/app/actions/admin";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -14,12 +16,22 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   const oid = Number(id);
   if (!Number.isFinite(oid)) notFound();
 
-  const [order] = await db
+  let [order] = await db
     .select()
     .from(orders)
     .where(eq(orders.id, oid))
     .limit(1);
   if (!order) notFound();
+
+  if (order.paymentStatus === "pending" || order.paymentStatus === "unpaid") {
+    await syncOrderPaymentStatusById(oid);
+    [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, oid))
+      .limit(1);
+    if (!order) notFound();
+  }
 
   const items = await db
     .select({
@@ -40,6 +52,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     promoDiscountPercent: order.promoDiscountPercent,
     totalAmount: order.totalAmount,
   });
+
+  const paymentMeta =
+    order.paymentStatus === "paid"
+      ? { label: "Оплачен", tone: "bg-green-50 border-green-200 text-green-700" }
+      : order.paymentStatus === "failed"
+        ? { label: "Оплата отклонена", tone: "bg-red-50 border-red-200 text-red-700" }
+        : order.paymentStatus === "pending"
+          ? { label: "Ожидает оплату", tone: "bg-yellow-50 border-yellow-200 text-yellow-700" }
+          : { label: "Не оплачен", tone: "bg-brand-elevated border-brand-border text-brand-muted" };
 
   return (
     <div>
@@ -71,6 +92,55 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-brand-border p-5 sm:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-brand-muted">Оплата</h2>
+              <p
+                className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentMeta.tone}`}
+              >
+                {paymentMeta.label}
+              </p>
+              {order.paymentFailureReason ? (
+                <p className="mt-2 text-xs text-brand-muted">
+                  Причина: {order.paymentFailureReason}
+                </p>
+              ) : null}
+              {order.paypassStatus ? (
+                <p className="mt-1 text-xs text-brand-muted">
+                  Статус PayPass: {order.paypassStatus}
+                </p>
+              ) : null}
+              {order.paidAmount ? (
+                <p className="mt-1 text-xs text-brand-muted">
+                  Подтвержденная сумма: {formatPrice(order.paidAmount)}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {order.paypassTelegramLink ? (
+                <a
+                  href={order.paypassTelegramLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-brand-border px-3 py-1.5 text-sm font-medium text-brand hover:border-brand/40 hover:bg-brand hover:text-white"
+                >
+                  Открыть ссылку оплаты
+                </a>
+              ) : null}
+              <form action={syncOrderPaymentStatus}>
+                <input type="hidden" name="orderId" value={order.id} />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-hover"
+                >
+                  Обновить статус оплаты
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
         <div className="rounded-xl border border-brand-border p-5">
           <h2 className="text-sm font-semibold text-brand-muted">Контакты</h2>
           <p className="mt-2 text-brand-heading">{order.customerName}</p>
