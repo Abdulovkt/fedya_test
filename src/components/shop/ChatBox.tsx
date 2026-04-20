@@ -17,10 +17,16 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatUrl = `/api/chat/${orderId}?token=${encodeURIComponent(token)}`;
 
   async function fetchMessages() {
-    const res = await fetch(`/api/chat/${orderId}?token=${token}`);
-    if (res.ok) setMessages(await res.json());
+    try {
+      const res = await fetch(chatUrl, { cache: "no-store" });
+      if (!res.ok) return;
+      setMessages((await res.json()) as Message[]);
+    } catch (error) {
+      console.error("Failed to fetch customer chat messages", error);
+    }
   }
 
   useEffect(() => {
@@ -42,12 +48,12 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
       const fd = new FormData();
       if (text.trim()) fd.set("text", text.trim());
       fd.set("attachment", attachment);
-      await fetch(`/api/chat/${orderId}?token=${token}`, {
+      await fetch(chatUrl, {
         method: "POST",
         body: fd,
       });
     } else {
-      await fetch(`/api/chat/${orderId}?token=${token}`, {
+      await fetch(chatUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.trim() }),

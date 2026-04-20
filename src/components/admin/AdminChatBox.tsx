@@ -24,10 +24,14 @@ export function AdminChatBox({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   async function fetchMessages() {
-    const res = await fetch(`/api/chat/${orderId}`);
-    if (res.ok) {
-      setMessages(await res.json());
-      markChatAsRead(orderId).catch(() => {});
+    try {
+      const res = await fetch(`/api/chat/${orderId}`, { cache: "no-store" });
+      if (res.ok) {
+        setMessages((await res.json()) as Message[]);
+        markChatAsRead(orderId).catch(() => {});
+      }
+    } catch (error) {
+      console.error("Failed to fetch admin chat messages", error);
     }
   }
 
