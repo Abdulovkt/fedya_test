@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format";
 import { getPricingFromStoredOrder } from "@/lib/pricing";
 import { getStatusMeta } from "@/lib/order-statuses";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
+import { getDisplayOrderNumber } from "@/lib/order-number";
 
 type OrderItem = {
   productName: string;
@@ -15,6 +16,7 @@ type OrderItem = {
 
 type Order = {
   id: number;
+  publicOrderNumber: string | null;
   createdAt: Date | null;
   status: string;
   customerName: string;
@@ -52,6 +54,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
           {orders.map((o) => {
             const isOpen = openId === o.id;
             const meta = getStatusMeta(o.status);
+            const displayOrderNumber = getDisplayOrderNumber(o);
             const pricing = getPricingFromStoredOrder({
               subtotal: o.subtotalAmount,
               autoDiscountAmount: o.autoDiscountAmount,
@@ -74,7 +77,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono font-semibold text-brand">
-                    {o.id}
+                    {displayOrderNumber}
                   </td>
                   <td className="px-4 py-3 text-brand-muted">
                     {o.createdAt

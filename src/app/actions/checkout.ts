@@ -12,6 +12,10 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getCartPricing } from "@/lib/pricing";
 import { getPromoValidationError, hasPromoBeenUsedByCustomer } from "@/lib/promocodes";
 import { createPayPassRequest } from "@/lib/paypass";
+import {
+  buildPublicPayPassClientRequestId,
+  generateUniquePublicOrderNumber,
+} from "@/lib/order-number";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
@@ -26,6 +30,15 @@ export type CheckoutState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
 };
+
+function isPublicOrderNumberUniqueError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("orders.public_order_number") ||
+    message.includes("orders_public_order_number_idx")
+  );
+}
 
 export async function placeOrder(
   _prev: CheckoutState,
@@ -88,38 +101,51 @@ export async function placeOrder(
 
   const chatToken = crypto.randomUUID();
 
-  const [order] = await db
-    .insert(orders)
-    .values({
-      status: "new",
-      paymentStatus: "pending",
-      customerName: parsed.data.customerName,
-      phone: parsed.data.phone,
-      email: normalizedEmail,
-      telegram: parsed.data.telegram ?? null,
-      address: parsed.data.address ?? null,
-      comment: parsed.data.comment ?? null,
-      subtotalAmount: pricing.subtotal,
-      autoDiscountAmount: pricing.autoDiscountAmount,
-      promoCode: pricing.appliedPromoCode,
-      promoDiscountAmount: pricing.promoDiscountAmount,
-      promoDiscountPercent: pricing.promoDiscountPercent,
-      appliedDiscountMode: pricing.appliedDiscountMode,
-      totalAmount: pricing.finalTotal,
-      chatToken,
-    })
-    .returning({ id: orders.id });
+  let order: { id: number; publicOrderNumber: string | null } | undefined;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const publicOrderNumber = await generateUniquePublicOrderNumber();
+    try {
+      [order] = await db
+        .insert(orders)
+        .values({
+          publicOrderNumber,
+          status: "new",
+          paymentStatus: "pending",
+          customerName: parsed.data.customerName,
+          phone: parsed.data.phone,
+          email: normalizedEmail,
+          telegram: parsed.data.telegram ?? null,
+          address: parsed.data.address ?? null,
+          comment: parsed.data.comment ?? null,
+          subtotalAmount: pricing.subtotal,
+          autoDiscountAmount: pricing.autoDiscountAmount,
+          promoCode: pricing.appliedPromoCode,
+          promoDiscountAmount: pricing.promoDiscountAmount,
+          promoDiscountPercent: pricing.promoDiscountPercent,
+          appliedDiscountMode: pricing.appliedDiscountMode,
+          totalAmount: pricing.finalTotal,
+          chatToken,
+        })
+        .returning({ id: orders.id, publicOrderNumber: orders.publicOrderNumber });
+      break;
+    } catch (error) {
+      if (!isPublicOrderNumberUniqueError(error)) {
+        throw error;
+      }
+    }
+  }
 
   if (!order) {
     return { error: "Не удалось создать заказ" };
   }
 
-  const paypassClientRequestId = `ORDER-${order.id}`;
+  const publicOrderNumber = order.publicOrderNumber ?? `#${order.id}`;
+  const paypassClientRequestId = buildPublicPayPassClientRequestId(publicOrderNumber);
   try {
     const paypass = await createPayPassRequest({
       amountRub: pricing.finalTotal / 100,
       clientRequestId: paypassClientRequestId,
-      comment: `Заказ #${order.id}`,
+      comment: `Заказ ${publicOrderNumber}`,
       clientFio: parsed.data.customerName,
       clientPhone: parsed.data.phone,
     });
@@ -181,8 +207,10 @@ export async function placeOrder(
     to: normalizedEmail,
     customerName: parsed.data.customerName,
     orderId: order.id,
+    orderNumber: publicOrderNumber,
+    orderRef: order.publicOrderNumber ?? String(order.id),
     chatToken,
   }).catch(() => {});
 
-  redirect(`/checkout/success?order=${order.id}&token=${chatToken}`);
+  redirect(`/checkout/success?order=${encodeURIComponent(publicOrderNumber)}&token=${chatToken}`);
 }

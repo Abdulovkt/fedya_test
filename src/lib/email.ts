@@ -36,11 +36,15 @@ export async function sendOrderConfirmationEmail({
   to,
   customerName,
   orderId,
+  orderNumber,
+  orderRef,
   chatToken,
 }: {
   to: string;
   customerName: string;
   orderId: number;
+  orderNumber: string;
+  orderRef?: string;
   chatToken: string;
 }) {
   const transporter = await getTransporter();
@@ -48,16 +52,16 @@ export async function sendOrderConfirmationEmail({
 
   const siteUrl = await getSiteUrl();
   const from = await getFrom();
-  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
+  const chatUrl = `${siteUrl}/chat/${orderRef ?? String(orderId)}?token=${chatToken}`;
 
   await transporter.sendMail({
     from,
     to,
-    subject: `Заказ #${orderId} оформлен — SportNutrition`,
+    subject: `Заказ ${orderNumber} оформлен — SportNutrition`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
         <h2 style="color:#e02c5c">Спасибо за заказ, ${customerName}!</h2>
-        <p>Ваш заказ <strong>#${orderId}</strong> успешно принят. Мы свяжемся с вами в ближайшее время.</p>
+        <p>Ваш заказ <strong>${orderNumber}</strong> успешно принят. Мы свяжемся с вами в ближайшее время.</p>
         <p>Если у вас есть вопросы — напишите нам в чат прямо сейчас:</p>
         <a href="${chatUrl}"
            style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
@@ -104,6 +108,8 @@ export async function sendOrderStatusEmail({
   to,
   customerName,
   orderId,
+  orderNumber,
+  orderRef,
   chatToken,
   status,
   message,
@@ -111,6 +117,8 @@ export async function sendOrderStatusEmail({
   to: string;
   customerName: string;
   orderId: number;
+  orderNumber: string;
+  orderRef?: string;
   chatToken: string;
   status: string;
   message?: string;
@@ -120,7 +128,7 @@ export async function sendOrderStatusEmail({
 
   const siteUrl = await getSiteUrl();
   const from = await getFrom();
-  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
+  const chatUrl = `${siteUrl}/chat/${orderRef ?? String(orderId)}?token=${chatToken}`;
   const statusMeta = getStatusMeta(status);
 
   const statusColors: Record<string, string> = {
@@ -136,10 +144,10 @@ export async function sendOrderStatusEmail({
   await transporter.sendMail({
     from,
     to,
-    subject: `Заказ #${orderId} — статус изменён на «${statusMeta.label}»`,
+    subject: `Заказ ${orderNumber} — статус изменён на «${statusMeta.label}»`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
-        <h2 style="color:#e02c5c">Обновление по заказу #${orderId}</h2>
+        <h2 style="color:#e02c5c">Обновление по заказу ${orderNumber}</h2>
         <p>Здравствуйте, <strong>${customerName}</strong>!</p>
         <p>Статус вашего заказа изменился:</p>
         <div style="display:inline-block;margin:16px 0;padding:10px 22px;background:${color}1a;border:1px solid ${color}4d;border-radius:999px;font-size:15px;font-weight:600;color:${color}">
@@ -165,12 +173,16 @@ export async function sendNewMessageEmail({
   to,
   customerName,
   orderId,
+  orderNumber,
+  orderRef,
   chatToken,
   messageText,
 }: {
   to: string;
   customerName: string;
   orderId: number;
+  orderNumber: string;
+  orderRef?: string;
   chatToken: string;
   messageText: string;
 }) {
@@ -179,17 +191,17 @@ export async function sendNewMessageEmail({
 
   const siteUrl = await getSiteUrl();
   const from = await getFrom();
-  const chatUrl = `${siteUrl}/chat/${orderId}?token=${chatToken}`;
+  const chatUrl = `${siteUrl}/chat/${orderRef ?? String(orderId)}?token=${chatToken}`;
 
   await transporter.sendMail({
     from,
     to,
-    subject: `Новое сообщение по заказу #${orderId}`,
+    subject: `Новое сообщение по заказу ${orderNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
         <h2 style="color:#e02c5c">Новое сообщение от продавца</h2>
         <p>Здравствуйте, ${customerName}!</p>
-        <p>По вашему заказу <strong>#${orderId}</strong> пришёл ответ:</p>
+        <p>По вашему заказу <strong>${orderNumber}</strong> пришёл ответ:</p>
         <blockquote style="border-left:4px solid #e02c5c;margin:16px 0;padding:12px 16px;background:#fdf2f5;border-radius:4px;font-style:italic">
           ${messageText}
         </blockquote>

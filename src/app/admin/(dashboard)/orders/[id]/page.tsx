@@ -8,6 +8,7 @@ import { getPricingFromStoredOrder } from "@/lib/pricing";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 import { syncOrderPaymentStatus } from "@/app/actions/admin";
+import { getDisplayOrderNumber } from "@/lib/order-number";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -61,6 +62,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         : order.paymentStatus === "pending"
           ? { label: "Ожидает оплату", tone: "bg-yellow-50 border-yellow-200 text-yellow-700" }
           : { label: "Не оплачен", tone: "bg-brand-elevated border-brand-border text-brand-muted" };
+  const displayOrderNumber = getDisplayOrderNumber(order);
 
   return (
     <div>
@@ -71,7 +73,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         ← Все заказы
       </Link>
       <h1 className="mt-4 text-2xl font-bold text-brand-heading">
-        Заказ #{order.id}
+        Заказ {displayOrderNumber}
       </h1>
       <p className="mt-1 text-sm text-brand-muted">
         {order.createdAt instanceof Date

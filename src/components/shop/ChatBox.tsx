@@ -10,7 +10,15 @@ type Message = {
   createdAt: number;
 };
 
-export function ChatBox({ orderId, token }: { orderId: number; token: string }) {
+export function ChatBox({
+  orderId,
+  orderNumber,
+  token,
+}: {
+  orderId: number;
+  orderNumber: string;
+  token: string;
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -75,7 +83,7 @@ export function ChatBox({ orderId, token }: { orderId: number; token: string }) 
         </div>
         <div>
           <p className="text-sm font-semibold text-brand-heading">Чат с магазином</p>
-          <p className="text-xs text-brand-muted">Заказ #{orderId} · Ответим в ближайшее время</p>
+          <p className="text-xs text-brand-muted">Заказ {orderNumber} · Ответим в ближайшее время</p>
         </div>
       </div>
 

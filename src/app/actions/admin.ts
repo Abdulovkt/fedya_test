@@ -30,6 +30,7 @@ import {
   type PromoCodeRecord,
 } from "@/lib/promocodes";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
+import { getDisplayOrderNumber } from "@/lib/order-number";
 
 async function requireAdmin() {
   const session = await auth();
@@ -364,6 +365,7 @@ export async function updateOrderStatus(formData: FormData) {
       email: orders.email,
       customerName: orders.customerName,
       chatToken: orders.chatToken,
+      publicOrderNumber: orders.publicOrderNumber,
     })
     .from(orders)
     .where(eq(orders.id, id))
@@ -397,6 +399,8 @@ export async function updateOrderStatus(formData: FormData) {
       to: order.email,
       customerName: order.customerName,
       orderId: id,
+      orderNumber: getDisplayOrderNumber({ id, publicOrderNumber: order.publicOrderNumber }),
+      orderRef: order.publicOrderNumber ?? String(id),
       chatToken: order.chatToken,
       status,
       message: message || undefined,

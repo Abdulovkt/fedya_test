@@ -110,6 +110,12 @@ function ensurePromoSchema(db: Database.Database) {
   if (!hasColumn(db, "orders", "paid_at")) {
     db.exec("ALTER TABLE orders ADD COLUMN paid_at INTEGER;");
   }
+  if (!hasColumn(db, "orders", "public_order_number")) {
+    db.exec("ALTER TABLE orders ADD COLUMN public_order_number TEXT;");
+  }
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS orders_public_order_number_idx ON orders (public_order_number);",
+  );
 }
 
 const sqlite =

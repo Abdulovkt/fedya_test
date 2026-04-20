@@ -122,6 +122,7 @@ export const cartItems = sqliteTable(
 
 export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  publicOrderNumber: text("public_order_number"),
   status: text("status").notNull().default("new"),
   paymentStatus: text("payment_status", {
     enum: ["unpaid", "pending", "paid", "failed"],

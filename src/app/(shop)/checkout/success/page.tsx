@@ -2,6 +2,7 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
+import { findOrderIdentity, getDisplayOrderNumber } from "@/lib/order-number";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 
 type Props = { searchParams: Promise<{ order?: string; token?: string }> };
@@ -10,12 +11,14 @@ export const metadata = { title: "Заказ оформлен" };
 
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const { order, token } = await searchParams;
-  const orderId = Number(order);
-  const canLoadOrder = Number.isFinite(orderId) && token;
+  const orderIdentity = order ? await findOrderIdentity(order) : null;
+  const orderId = orderIdentity?.id;
+  const canLoadOrder = Boolean(orderId && token);
 
   let orderRecord:
     | {
         id: number;
+        publicOrderNumber: string | null;
         chatToken: string | null;
         paymentStatus: string;
         paymentFailureReason: string | null;
@@ -27,6 +30,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     [orderRecord] = await db
       .select({
         id: orders.id,
+        publicOrderNumber: orders.publicOrderNumber,
         chatToken: orders.chatToken,
         paymentStatus: orders.paymentStatus,
         paymentFailureReason: orders.paymentFailureReason,
@@ -46,6 +50,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       [orderRecord] = await db
         .select({
           id: orders.id,
+        publicOrderNumber: orders.publicOrderNumber,
           chatToken: orders.chatToken,
           paymentStatus: orders.paymentStatus,
           paymentFailureReason: orders.paymentFailureReason,
@@ -73,6 +78,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         : orderRecord?.paymentStatus === "unpaid"
           ? { label: "Ссылка оплаты готовится", tone: "bg-brand-elevated border-brand-border text-brand-muted" }
           : null;
+  const displayOrderNumber =
+    orderRecord ? getDisplayOrderNumber(orderRecord) : order ? `#${order}` : null;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
@@ -91,17 +98,17 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       <h1 className="mt-4 text-2xl font-bold text-brand-heading">
         Спасибо за заказ!
       </h1>
-      {order && (
+      {displayOrderNumber && (
         <p className="mt-3 text-brand-muted">
           Номер заказа:{" "}
-          <span className="font-mono font-semibold text-brand">#{order}</span>
+          <span className="font-mono font-semibold text-brand">{displayOrderNumber}</span>
         </p>
       )}
       <p className="mt-2 text-sm text-brand-muted">
         Мы свяжемся с вами по указанным контактам.
       </p>
 
-      {order && token && (
+      {orderRecord && token && (
         <div className="mt-6 rounded-xl border border-brand-teal/30 bg-brand-teal/5 px-5 py-4">
           <p className="text-sm font-medium text-brand-heading">
             Есть вопросы по заказу?
@@ -110,7 +117,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             Напишите нам в чат — ответим быстро.
           </p>
           <Link
-            href={`/chat/${order}?token=${token}`}
+            href={`/chat/${orderRecord.publicOrderNumber ?? orderRecord.id}?token=${token}`}
             className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-teal px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-teal/80"
           >
             Открыть чат

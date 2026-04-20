@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { ChatBox } from "@/components/shop/ChatBox";
+import { findOrderIdentity, getDisplayOrderNumber } from "@/lib/order-number";
 
 type Props = {
   params: Promise<{ orderId: string }>;
@@ -15,11 +16,18 @@ export default async function CustomerChatPage({ params, searchParams }: Props) 
   const { orderId } = await params;
   const { token } = await searchParams;
 
-  const oid = Number(orderId);
-  if (!Number.isFinite(oid) || !token) notFound();
+  if (!token) notFound();
+  const orderIdentity = await findOrderIdentity(orderId);
+  if (!orderIdentity) notFound();
+  const oid = orderIdentity.id;
 
   const [order] = await db
-    .select({ id: orders.id, customerName: orders.customerName, chatToken: orders.chatToken })
+    .select({
+      id: orders.id,
+      publicOrderNumber: orders.publicOrderNumber,
+      customerName: orders.customerName,
+      chatToken: orders.chatToken,
+    })
     .from(orders)
     .where(eq(orders.id, oid))
     .limit(1);
@@ -33,7 +41,11 @@ export default async function CustomerChatPage({ params, searchParams }: Props) 
         Здравствуйте, {order.customerName}! Задайте любой вопрос по вашему заказу.
       </p>
       <div className="mt-6">
-        <ChatBox orderId={order.id} token={token} />
+        <ChatBox
+          orderId={order.id}
+          orderNumber={getDisplayOrderNumber(order)}
+          token={token}
+        />
       </div>
     </div>
   );

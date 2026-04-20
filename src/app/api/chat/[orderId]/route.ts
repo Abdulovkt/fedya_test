@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { chatMessages, orders } from "@/db/schema";
 import { auth } from "@/auth";
 import { sendNewMessageEmail } from "@/lib/email";
+import { getDisplayOrderNumber } from "@/lib/order-number";
 
 type Params = { params: Promise<{ orderId: string }> };
 const MAX_ATTACHMENT_SIZE = 8 * 1024 * 1024;
@@ -159,6 +160,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         email: orders.email,
         customerName: orders.customerName,
         chatToken: orders.chatToken,
+        publicOrderNumber: orders.publicOrderNumber,
       })
       .from(orders)
       .where(eq(orders.id, oid))
@@ -169,6 +171,8 @@ export async function POST(req: NextRequest, { params }: Params) {
         to: order.email,
         customerName: order.customerName,
         orderId: oid,
+        orderNumber: getDisplayOrderNumber({ id: oid, publicOrderNumber: order.publicOrderNumber }),
+        orderRef: order.publicOrderNumber ?? String(oid),
         chatToken: order.chatToken,
         messageText: text,
       }).catch(() => {});

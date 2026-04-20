@@ -6,6 +6,7 @@ import {
   getPayPassRequest,
   mapPayPassStatusToLocal,
 } from "@/lib/paypass";
+import { buildPublicPayPassClientRequestId } from "@/lib/order-number";
 
 const PAYPASS_TTL_MS = 48 * 60 * 60 * 1000;
 const CANCELLABLE_ORDER_STATUSES = new Set(["new", "processing", "assembled"]);
@@ -42,6 +43,7 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
       createdAt: orders.createdAt,
       status: orders.status,
       paymentStatus: orders.paymentStatus,
+      publicOrderNumber: orders.publicOrderNumber,
       paypassPublicId: orders.paypassPublicId,
       paypassClientRequestId: orders.paypassClientRequestId,
       totalAmount: orders.totalAmount,
@@ -86,12 +88,15 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
 
   if (!lookup) {
     if (order.paymentStatus === "unpaid") {
-      const clientRequestId = `ORDER-${order.id}`;
+      const displayOrderNumber = order.publicOrderNumber ?? `#${order.id}`;
+      const clientRequestId = buildPublicPayPassClientRequestId(
+        order.publicOrderNumber ?? String(order.id),
+      );
       try {
         const created = await createPayPassRequest({
           amountRub: order.totalAmount / 100,
           clientRequestId,
-          comment: `Заказ #${order.id}`,
+          comment: `Заказ ${displayOrderNumber}`,
           clientFio: order.customerName,
           clientPhone: order.phone,
         });
