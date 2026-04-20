@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { CheckoutSuccessPaymentPoller } from "@/components/shop/CheckoutSuccessPaymentPoller";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { findOrderIdentity, getDisplayOrderNumber } from "@/lib/order-number";
@@ -64,10 +65,14 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   }
 
   const isTokenValid = Boolean(orderRecord && token && orderRecord.chatToken === token);
+  const paymentStatus = orderRecord?.paymentStatus;
   const paymentLink = isTokenValid && orderRecord ? orderRecord.paypassTelegramLink : null;
   const qrUrl = paymentLink
     ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(paymentLink)}`
     : null;
+  const showTelegramPaymentCta =
+    Boolean(paymentLink) &&
+    (paymentStatus === "pending" || paymentStatus === "unpaid");
 
   const paymentMeta =
     orderRecord?.paymentStatus === "paid"
@@ -135,44 +140,71 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             {paymentMeta.label}
           </p>
 
-          {paymentLink ? (
-            <>
-              <p className="mt-3 text-sm text-brand-muted">
-                Нажмите кнопку ниже или отсканируйте QR-код, чтобы открыть оплату в Telegram-боте.
-              </p>
-              <a
-                href={paymentLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
-              >
-                Открыть оплату в Telegram
-              </a>
-              {qrUrl && (
-                <div className="mt-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={qrUrl}
-                    alt="QR код для открытия оплаты в Telegram"
-                    className="mx-auto h-52 w-52 rounded-lg border border-brand-border bg-white p-2"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-brand-muted">
-              Ссылка на оплату пока недоступна. Свяжитесь с менеджером через чат заказа.
+          {paymentStatus === "paid" && (
+            <p className="mt-3 text-sm text-green-800">
+              Оплата получена. Спасибо!
             </p>
           )}
 
-          {orderRecord?.paymentFailureReason && (
+          {paymentStatus === "failed" && (
+            <p className="mt-3 text-sm text-brand-muted">
+              Онлайн-оплата не прошла. Напишите в чат заказа — подскажем, как оплатить
+              другим способом.
+            </p>
+          )}
+
+          {(paymentStatus === "pending" || paymentStatus === "unpaid") && (
+            <>
+              {showTelegramPaymentCta && paymentLink ? (
+                <>
+                  <p className="mt-3 text-sm text-brand-muted">
+                    Нажмите кнопку ниже или отсканируйте QR-код, чтобы открыть оплату в
+                    Telegram-боте.
+                  </p>
+                  <a
+                    href={paymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
+                  >
+                    Открыть оплату в Telegram
+                  </a>
+                  {qrUrl && (
+                    <div className="mt-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrUrl}
+                        alt="QR код для открытия оплаты в Telegram"
+                        className="mx-auto h-52 w-52 rounded-lg border border-brand-border bg-white p-2"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-brand-muted">
+                  Ссылка на оплату пока недоступна. Свяжитесь с менеджером через чат заказа.
+                </p>
+              )}
+            </>
+          )}
+
+          {orderRecord?.paymentFailureReason && paymentStatus !== "paid" && (
             <p className="mt-2 text-xs text-brand-muted/80">
               Причина: {orderRecord.paymentFailureReason}
             </p>
           )}
         </div>
       )}
+
+      {isTokenValid &&
+        orderRecord &&
+        order &&
+        token &&
+        (orderRecord.paymentStatus === "pending" ||
+          orderRecord.paymentStatus === "unpaid") && (
+          <CheckoutSuccessPaymentPoller orderRef={order} token={token} />
+        )}
 
       <Link
         href="/catalog"
