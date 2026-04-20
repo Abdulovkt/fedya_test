@@ -57,12 +57,15 @@ export async function sendOrderConfirmationEmail({
   await transporter.sendMail({
     from,
     to,
-    subject: `Заказ ${orderNumber} оформлен — SportNutrition`,
+    subject: `Заказ ${orderNumber} — ожидает оплату — SportNutrition`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
-        <h2 style="color:#e02c5c">Спасибо за заказ, ${customerName}!</h2>
-        <p>Ваш заказ <strong>${orderNumber}</strong> успешно принят. Мы свяжемся с вами в ближайшее время.</p>
-        <p>Если у вас есть вопросы — напишите нам в чат прямо сейчас:</p>
+        <h2 style="color:#e02c5c">Спасибо, ${customerName}!</h2>
+        <p>Заказ <strong>${orderNumber}</strong> создан и ожидает оплаты. Поступление денег пока не подтверждено — после оплаты мы продолжим обработку заказа.</p>
+        <p style="margin-top:16px;line-height:1.5">
+          Как оплатить и перейти к оплате, вы уже видели на странице после оформления. Это письмо — напоминание о номере заказа; мы специально не дублируем здесь ссылки на оплату, чтобы не путать вас, если вы откроете письмо позже.
+        </p>
+        <p style="margin-top:16px">Если нужна помощь — напишите нам в чат на сайте:</p>
         <a href="${chatUrl}"
            style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
           Открыть чат с магазином
