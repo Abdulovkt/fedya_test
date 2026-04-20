@@ -8,7 +8,11 @@ import {
 
 const initialState: CheckoutState = {};
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  promoCode,
+}: {
+  promoCode?: string | null;
+}) {
   const [state, formAction, pending] = useActionState(
     placeOrder,
     initialState,
@@ -65,6 +69,12 @@ export function CheckoutForm() {
         />
         {state.fieldErrors?.email?.[0] ? (
           <p className="mt-1 text-xs text-red-400">{state.fieldErrors.email[0]}</p>
+        ) : null}
+        {promoCode ? (
+          <p className="mt-1 text-xs text-brand-muted">
+            Для промокода {promoCode} после ввода этого email будет выполнена финальная проверка:
+            использовался ли он ранее этим покупателем по email или по совпадению ФИО и адреса.
+          </p>
         ) : null}
       </div>
       <div>

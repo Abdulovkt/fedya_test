@@ -39,6 +39,47 @@ export const products = sqliteTable("products", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+export const promoCodes = sqliteTable(
+  "promo_codes",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    code: text("code").notNull(),
+    discountPercent: integer("discount_percent").notNull(),
+    startsAt: integer("starts_at", { mode: "timestamp_ms" }).notNull(),
+    endsAt: integer("ends_at", { mode: "timestamp_ms" }).notNull(),
+    appliesToAll: integer("applies_to_all", { mode: "boolean" }).notNull().default(false),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => ({
+    codeIdx: uniqueIndex("promo_codes_code").on(t.code),
+  }),
+);
+
+export const promoCodeProducts = sqliteTable(
+  "promo_code_products",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    promoCodeId: integer("promo_code_id")
+      .notNull()
+      .references(() => promoCodes.id, { onDelete: "cascade" }),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    promoProductIdx: uniqueIndex("promo_code_products_unique").on(
+      t.promoCodeId,
+      t.productId,
+    ),
+  }),
+);
+
 export const adminUsers = sqliteTable("admin_users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   email: text("email").notNull().unique(),
@@ -47,6 +88,9 @@ export const adminUsers = sqliteTable("admin_users", {
 
 export const carts = sqliteTable("carts", {
   id: text("id").primaryKey(),
+  appliedPromoCodeId: integer("applied_promo_code_id").references(() => promoCodes.id, {
+    onDelete: "set null",
+  }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -85,6 +129,14 @@ export const orders = sqliteTable("orders", {
   telegram: text("telegram"),
   address: text("address"),
   comment: text("comment"),
+  subtotalAmount: integer("subtotal_amount").notNull().default(0),
+  autoDiscountAmount: integer("auto_discount_amount").notNull().default(0),
+  promoCode: text("promo_code"),
+  promoDiscountAmount: integer("promo_discount_amount").notNull().default(0),
+  promoDiscountPercent: integer("promo_discount_percent").notNull().default(0),
+  appliedDiscountMode: text("applied_discount_mode", {
+    enum: ["none", "auto", "promo"],
+  }).notNull().default("none"),
   totalAmount: integer("total_amount").notNull(),
   chatToken: text("chat_token"),
   adminLastReadAt: integer("admin_last_read_at"),
@@ -120,6 +172,26 @@ export const orderItems = sqliteTable("order_items", {
   priceAtOrder: integer("price_at_order").notNull(),
 });
 
+export const promoCodeUsages = sqliteTable(
+  "promo_code_usages",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    promoCodeId: integer("promo_code_id")
+      .notNull()
+      .references(() => promoCodes.id, { onDelete: "cascade" }),
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    usedAt: integer("used_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => ({
+    promoEmailIdx: uniqueIndex("promo_code_usages_promo_email").on(t.promoCodeId, t.email),
+  }),
+);
+
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull().default(""),
@@ -136,10 +208,27 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   cartItems: many(cartItems),
   orderItems: many(orderItems),
+  promoCodeProducts: many(promoCodeProducts),
 }));
 
 export const cartsRelations = relations(carts, ({ many }) => ({
   items: many(cartItems),
+}));
+
+export const promoCodesRelations = relations(promoCodes, ({ many }) => ({
+  productLinks: many(promoCodeProducts),
+  usages: many(promoCodeUsages),
+}));
+
+export const promoCodeProductsRelations = relations(promoCodeProducts, ({ one }) => ({
+  promoCode: one(promoCodes, {
+    fields: [promoCodeProducts.promoCodeId],
+    references: [promoCodes.id],
+  }),
+  product: one(products, {
+    fields: [promoCodeProducts.productId],
+    references: [products.id],
+  }),
 }));
 
 export const cartItemsRelations = relations(cartItems, ({ one }) => ({
@@ -152,6 +241,7 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
 
 export const ordersRelations = relations(orders, ({ many }) => ({
   items: many(orderItems),
+  promoCodeUsages: many(promoCodeUsages),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -159,5 +249,16 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   product: one(products, {
     fields: [orderItems.productId],
     references: [products.id],
+  }),
+}));
+
+export const promoCodeUsagesRelations = relations(promoCodeUsages, ({ one }) => ({
+  promoCode: one(promoCodes, {
+    fields: [promoCodeUsages.promoCodeId],
+    references: [promoCodes.id],
+  }),
+  order: one(orders, {
+    fields: [promoCodeUsages.orderId],
+    references: [orders.id],
   }),
 }));

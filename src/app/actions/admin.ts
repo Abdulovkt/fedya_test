@@ -7,11 +7,28 @@ import path from "path";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { categories, chatMessages, orders, products } from "@/db/schema";
+import {
+  categories,
+  chatMessages,
+  orders,
+  products,
+  promoCodeProducts,
+  promoCodes,
+} from "@/db/schema";
 import { slugify } from "@/lib/format";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
 import { STATUS_VALUES, getStatusMeta } from "@/lib/order-statuses";
-import { sendOrderStatusEmail, verifyEmailTransport } from "@/lib/email";
+import {
+  sendOrderStatusEmail,
+  sendPromoCodeAnnouncementEmail,
+  verifyEmailTransport,
+} from "@/lib/email";
+import {
+  getPromoProducts,
+  getPromoRecipients,
+  normalizePromoCode,
+  type PromoCodeRecord,
+} from "@/lib/promocodes";
 
 async function requireAdmin() {
   const session = await auth();
@@ -163,6 +180,141 @@ export async function deleteProduct(formData: FormData) {
   await db.delete(products).where(eq(products.id, id));
   revalidatePath("/admin/products");
   revalidatePath("/catalog");
+}
+
+const promoCodeSchema = z.object({
+  code: z.string().min(3, "Укажите код промокода"),
+  discountPercent: z.coerce.number().int().min(1, "Минимум 1%").max(90, "Максимум 90%"),
+  startsAt: z.coerce.date(),
+  endsAt: z.coerce.date(),
+  appliesToAll: z.boolean(),
+  productIds: z.array(z.coerce.number().int().positive()),
+});
+
+export type CreatePromoCodeState =
+  | {
+      ok?: boolean;
+      error?: string;
+    }
+  | null;
+
+async function sendPromoCodeNotifications(promo: PromoCodeRecord) {
+  const recipients = await getPromoRecipients();
+  if (!recipients.length) {
+    return;
+  }
+
+  const promoProducts = await getPromoProducts(promo);
+  const productNames = promoProducts.map((product) => product.name);
+
+  await Promise.allSettled(
+    recipients.map((recipient) =>
+      sendPromoCodeAnnouncementEmail({
+        to: recipient.email,
+        customerName: recipient.customerName,
+        code: promo.code,
+        discountPercent: promo.discountPercent,
+        startsAt: promo.startsAt,
+        endsAt: promo.endsAt,
+        productNames,
+        appliesToAll: promo.appliesToAll,
+      }),
+    ),
+  );
+}
+
+export async function createPromoCode(
+  _prev: CreatePromoCodeState,
+  formData: FormData,
+): Promise<CreatePromoCodeState> {
+  await requireAdmin();
+
+  const parsed = promoCodeSchema.safeParse({
+    code: normalizePromoCode(String(formData.get("code") ?? "")),
+    discountPercent: formData.get("discountPercent"),
+    startsAt: formData.get("startsAt"),
+    endsAt: formData.get("endsAt"),
+    appliesToAll: formData.get("appliesToAll") === "on",
+    productIds: formData.getAll("productIds"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Проверьте форму промокода" };
+  }
+
+  if (parsed.data.endsAt <= parsed.data.startsAt) {
+    return { error: "Дата окончания должна быть позже даты начала" };
+  }
+
+  if (!parsed.data.appliesToAll && parsed.data.productIds.length === 0) {
+    return { error: "Выберите хотя бы один товар для промокода" };
+  }
+
+  const uniqueProductIds = [...new Set(parsed.data.productIds)];
+
+  let promo: typeof promoCodes.$inferSelect | undefined;
+  try {
+    [promo] = await db
+      .insert(promoCodes)
+      .values({
+        code: parsed.data.code,
+        discountPercent: parsed.data.discountPercent,
+        startsAt: parsed.data.startsAt,
+        endsAt: parsed.data.endsAt,
+        appliesToAll: parsed.data.appliesToAll,
+        isActive: true,
+      })
+      .returning();
+  } catch {
+    return { error: "Не удалось создать промокод. Возможно, такой код уже существует" };
+  }
+
+  if (!promo) {
+    return { error: "Не удалось создать промокод" };
+  }
+
+  if (!parsed.data.appliesToAll) {
+    await db.insert(promoCodeProducts).values(
+      uniqueProductIds.map((productId) => ({
+        promoCodeId: promo.id,
+        productId,
+      })),
+    );
+  }
+
+  const promoRecord: PromoCodeRecord = {
+    id: promo.id,
+    code: promo.code,
+    discountPercent: promo.discountPercent,
+    startsAt: promo.startsAt,
+    endsAt: promo.endsAt,
+    appliesToAll: promo.appliesToAll,
+    isActive: promo.isActive,
+    productIds: parsed.data.appliesToAll ? [] : uniqueProductIds,
+  };
+
+  sendPromoCodeNotifications(promoRecord).catch(() => {});
+
+  revalidatePath("/admin/promocodes");
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
+
+  return { ok: true };
+}
+
+export async function deletePromoCode(formData: FormData) {
+  await requireAdmin();
+
+  const id = Number(formData.get("id"));
+  if (!Number.isFinite(id)) {
+    return;
+  }
+
+  await db.delete(promoCodes).where(eq(promoCodes.id, id));
+
+  revalidatePath("/admin/promocodes");
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
 }
 
 export type SaveSettingsState = { ok?: boolean; error?: string } | null;

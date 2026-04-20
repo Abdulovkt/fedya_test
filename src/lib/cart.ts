@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cartItems, carts, products } from "@/db/schema";
+import { getPromoCodeById, type PromoCodeRecord } from "@/lib/promocodes";
 import { releaseExpiredReservations } from "@/lib/reservation";
 
 const CART_COOKIE = "cart_id";
@@ -39,6 +40,28 @@ export async function getCartId(): Promise<string | undefined> {
     .where(eq(carts.id, id))
     .limit(1);
   return existing.length ? id : undefined;
+}
+
+export type CartRecord = {
+  id: string;
+  appliedPromoCodeId: number | null;
+};
+
+export async function getCartRecord(): Promise<CartRecord | null> {
+  const id = await getCartId();
+  if (!id) {
+    return null;
+  }
+
+  const [cart] = await db.select().from(carts).where(eq(carts.id, id)).limit(1);
+  if (!cart) {
+    return null;
+  }
+
+  return {
+    id: cart.id,
+    appliedPromoCodeId: cart.appliedPromoCodeId,
+  };
 }
 
 export type CartLine = {
@@ -89,6 +112,15 @@ export async function getCartLines(): Promise<CartLine[]> {
 export async function getCartItemCount(): Promise<number> {
   const lines = await getCartLines();
   return lines.reduce((s, l) => s + l.quantity, 0);
+}
+
+export async function getCartPromoCode(): Promise<PromoCodeRecord | null> {
+  const cart = await getCartRecord();
+  if (!cart?.appliedPromoCodeId) {
+    return null;
+  }
+
+  return getPromoCodeById(cart.appliedPromoCodeId);
 }
 
 export async function touchCart(cartId: string) {

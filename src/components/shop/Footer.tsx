@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -6,11 +7,19 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <p className="text-lg font-semibold text-brand">SportNutrition</p>
-            <p className="mt-2 text-sm text-brand-muted">
-              Спортивное питание с доставкой. Информация на сайте не является
-              медицинской рекомендацией.
-            </p>
+            <Link
+              href="/"
+              className="relative flex h-10 w-[138px] items-center"
+              aria-label="FedorPharm"
+            >
+              <Image
+                src="/logo-black.png"
+                alt="FedorPharm"
+                fill
+                className="object-contain"
+                sizes="138px"
+              />
+            </Link>
           </div>
           <div>
             <p className="text-sm font-medium text-brand-heading">Магазин</p>
@@ -41,7 +50,7 @@ export function Footer() {
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-brand-muted/70">
-          © {new Date().getFullYear()} SportNutrition. Все права защищены.
+          © {new Date().getFullYear()}. Все права защищены.
         </p>
       </div>
     </footer>

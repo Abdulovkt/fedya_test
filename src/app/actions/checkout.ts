@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { cartItems, orderItems, orders } from "@/db/schema";
-import { getCartId, getCartLines } from "@/lib/cart";
+import { cartItems, carts, orderItems, orders, promoCodeUsages } from "@/db/schema";
+import { getCartId, getCartLines, getCartPromoCode } from "@/lib/cart";
 import { releaseExpiredReservations } from "@/lib/reservation";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { getCartPricing } from "@/lib/pricing";
+import { getPromoValidationError, hasPromoBeenUsedByCustomer } from "@/lib/promocodes";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
@@ -56,10 +58,32 @@ export async function placeOrder(
     return { error: "Корзина пуста" };
   }
 
-  const totalAmount = lines.reduce(
-    (sum, l) => sum + l.price * l.quantity,
-    0,
-  );
+  const appliedPromo = await getCartPromoCode();
+  if (appliedPromo) {
+    const validationError = getPromoValidationError(lines, appliedPromo);
+    if (validationError) {
+      await db
+        .update(carts)
+        .set({ appliedPromoCodeId: null, updatedAt: new Date() })
+        .where(eq(carts.id, cartId));
+      return { error: validationError };
+    }
+
+    const alreadyUsed = await hasPromoBeenUsedByCustomer(appliedPromo.id, {
+      email: parsed.data.email,
+      customerName: parsed.data.customerName,
+      address: parsed.data.address,
+    });
+    if (alreadyUsed) {
+      return {
+        error:
+          "Этот промокод уже был использован ранее для этого покупателя. Уберите его или введите другой промокод.",
+      };
+    }
+  }
+
+  const pricing = getCartPricing(lines, appliedPromo);
+  const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   const chatToken = crypto.randomUUID();
 
@@ -69,11 +93,17 @@ export async function placeOrder(
       status: "new",
       customerName: parsed.data.customerName,
       phone: parsed.data.phone,
-      email: parsed.data.email,
+      email: normalizedEmail,
       telegram: parsed.data.telegram ?? null,
       address: parsed.data.address ?? null,
       comment: parsed.data.comment ?? null,
-      totalAmount,
+      subtotalAmount: pricing.subtotal,
+      autoDiscountAmount: pricing.autoDiscountAmount,
+      promoCode: pricing.appliedPromoCode,
+      promoDiscountAmount: pricing.promoDiscountAmount,
+      promoDiscountPercent: pricing.promoDiscountPercent,
+      appliedDiscountMode: pricing.appliedDiscountMode,
+      totalAmount: pricing.finalTotal,
       chatToken,
     })
     .returning({ id: orders.id });
@@ -91,16 +121,30 @@ export async function placeOrder(
     })),
   );
 
+  if (appliedPromo && pricing.appliedDiscountMode === "promo") {
+    await db.insert(promoCodeUsages).values({
+      promoCodeId: appliedPromo.id,
+      orderId: order.id,
+      email: normalizedEmail,
+    });
+  }
+
   await db.delete(cartItems).where(eq(cartItems.cartId, cartId));
+  await db
+    .update(carts)
+    .set({ appliedPromoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cartId));
 
   revalidatePath("/");
   revalidatePath("/cart");
+  revalidatePath("/checkout");
   revalidatePath("/catalog");
   revalidatePath("/admin/products");
+  revalidatePath("/admin/orders");
 
   // Send confirmation email with chat link (non-blocking)
   sendOrderConfirmationEmail({
-    to: parsed.data.email,
+    to: normalizedEmail,
     customerName: parsed.data.customerName,
     orderId: order.id,
     chatToken,

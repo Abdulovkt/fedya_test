@@ -3,9 +3,46 @@
 import { revalidatePath } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { cartItems, products } from "@/db/schema";
-import { getOrCreateCartId, getCartId, touchCart } from "@/lib/cart";
+import { cartItems, carts, products } from "@/db/schema";
+import { getOrCreateCartId, getCartId, getCartLines, touchCart } from "@/lib/cart";
+import {
+  getPromoCodeByCode,
+  getPromoCodeById,
+  getPromoValidationError,
+  normalizePromoCode,
+} from "@/lib/promocodes";
 import { releaseExpiredReservations, RESERVATION_MS } from "@/lib/reservation";
+
+export type PromoCodeState = {
+  ok?: boolean;
+  message?: string;
+  error?: string;
+} | null;
+
+async function syncCartPromoCode(cartId: string) {
+  const [cart] = await db
+    .select({ appliedPromoCodeId: carts.appliedPromoCodeId })
+    .from(carts)
+    .where(eq(carts.id, cartId))
+    .limit(1);
+
+  if (!cart?.appliedPromoCodeId) {
+    return;
+  }
+
+  const promo = await getPromoCodeById(cart.appliedPromoCodeId);
+  const lines = await getCartLines();
+  const validationError = getPromoValidationError(lines, promo);
+
+  if (!validationError) {
+    return;
+  }
+
+  await db
+    .update(carts)
+    .set({ appliedPromoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cartId));
+}
 
 export async function addToCart(formData: FormData) {
   const raw = formData.get("productId");
@@ -65,9 +102,11 @@ export async function addToCart(formData: FormData) {
   }
 
   await touchCart(cartId);
+  await syncCartPromoCode(cartId);
   revalidatePath("/");
   revalidatePath("/catalog");
   revalidatePath("/cart");
+  revalidatePath("/checkout");
   revalidatePath("/admin/products");
 }
 
@@ -144,7 +183,9 @@ export async function updateCartItemQuantity(formData: FormData) {
   }
 
   await touchCart(cartId);
+  await syncCartPromoCode(cartId);
   revalidatePath("/cart");
+  revalidatePath("/checkout");
   revalidatePath("/admin/products");
 }
 
@@ -177,6 +218,61 @@ export async function removeCartItem(formData: FormData) {
   });
 
   await touchCart(cartId);
+  await syncCartPromoCode(cartId);
   revalidatePath("/cart");
+  revalidatePath("/checkout");
   revalidatePath("/admin/products");
+}
+
+export async function applyPromoCode(
+  _prev: PromoCodeState,
+  formData: FormData,
+): Promise<PromoCodeState> {
+  const cartId = await getOrCreateCartId();
+  const lines = await getCartLines();
+  if (!lines.length) {
+    return { error: "Сначала добавьте товары в корзину" };
+  }
+
+  const code = normalizePromoCode(String(formData.get("promoCode") ?? ""));
+  if (!code) {
+    return { error: "Введите промокод" };
+  }
+
+  const promo = await getPromoCodeByCode(code);
+  const validationError = getPromoValidationError(lines, promo);
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  await db
+    .update(carts)
+    .set({
+      appliedPromoCodeId: promo!.id,
+      updatedAt: new Date(),
+    })
+    .where(eq(carts.id, cartId));
+
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
+
+  return {
+    ok: true,
+    message: `Промокод ${promo!.code} применён`,
+  };
+}
+
+export async function removePromoCode(): Promise<void> {
+  const cartId = await getCartId();
+  if (!cartId) {
+    return;
+  }
+
+  await db
+    .update(carts)
+    .set({ appliedPromoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cartId));
+
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
 }

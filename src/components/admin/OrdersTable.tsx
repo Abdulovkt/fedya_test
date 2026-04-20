@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Fragment, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import { getPricingFromStoredOrder } from "@/lib/pricing";
 import { getStatusMeta } from "@/lib/order-statuses";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 
@@ -22,6 +23,11 @@ type Order = {
   telegram: string | null;
   address: string | null;
   comment: string | null;
+  subtotalAmount: number;
+  autoDiscountAmount: number;
+  promoCode: string | null;
+  promoDiscountAmount: number;
+  promoDiscountPercent: number;
   totalAmount: number;
   items: OrderItem[];
 };
@@ -46,6 +52,14 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
           {orders.map((o) => {
             const isOpen = openId === o.id;
             const meta = getStatusMeta(o.status);
+            const pricing = getPricingFromStoredOrder({
+              subtotal: o.subtotalAmount,
+              autoDiscountAmount: o.autoDiscountAmount,
+              promoCode: o.promoCode,
+              promoDiscountAmount: o.promoDiscountAmount,
+              promoDiscountPercent: o.promoDiscountPercent,
+              totalAmount: o.totalAmount,
+            });
             return (
               <Fragment key={o.id}>
                 <tr
@@ -182,10 +196,38 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                             <tfoot>
                               <tr className="border-t border-brand-border">
                                 <td colSpan={2} className="pt-2 text-brand-muted">
+                                  Сумма товаров
+                                </td>
+                                <td className="pt-2 text-brand-heading">
+                                  {formatPrice(pricing.subtotal)}
+                                </td>
+                              </tr>
+                              {pricing.autoDiscountAmount > 0 && (
+                                <tr>
+                                  <td colSpan={2} className="pt-2 text-brand-muted">
+                                    Скидка по сумме {pricing.autoDiscountRate}%
+                                  </td>
+                                  <td className="pt-2 font-medium text-brand">
+                                    -{formatPrice(pricing.autoDiscountAmount)}
+                                  </td>
+                                </tr>
+                              )}
+                              {pricing.promoDiscountAmount > 0 && (
+                                <tr>
+                                  <td colSpan={2} className="pt-2 text-brand-muted">
+                                    Промокод {pricing.appliedPromoCode} ({pricing.promoDiscountPercent}%)
+                                  </td>
+                                  <td className="pt-2 font-medium text-brand">
+                                    -{formatPrice(pricing.promoDiscountAmount)}
+                                  </td>
+                                </tr>
+                              )}
+                              <tr>
+                                <td colSpan={2} className="pt-2 text-brand-muted">
                                   Итого
                                 </td>
                                 <td className="pt-2 font-bold text-brand">
-                                  {formatPrice(o.totalAmount)}
+                                  {formatPrice(pricing.finalTotal)}
                                 </td>
                               </tr>
                             </tfoot>

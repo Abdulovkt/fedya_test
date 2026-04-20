@@ -4,6 +4,39 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 
 type Phase = "hidden" | "title" | "frame" | "items" | "lineBottom";
 
+const WHY_US_ITEMS = [
+  {
+    title: "Широкий выбор",
+    subtitle: "высококачественных препаратов",
+    ring: "from-brand-teal/95 to-brand-teal/65",
+    icon: "pills",
+  },
+  {
+    title: "Быстрое оформление",
+    subtitle: "заказа без лишних шагов",
+    ring: "from-brand/95 to-brand-secondary/70",
+    icon: "bag",
+  },
+  {
+    title: "Оперативная доставка",
+    subtitle: "аккуратно и по срокам",
+    ring: "from-emerald-500/90 to-teal-500/70",
+    icon: "delivery",
+  },
+  {
+    title: "Гарантия качества",
+    subtitle: "на весь ассортимент",
+    ring: "from-sky-600/90 to-brand-teal/65",
+    icon: "shield",
+  },
+  {
+    title: "Консультация",
+    subtitle: "по применению и подбору",
+    ring: "from-amber-400/95 to-amber-500/70",
+    icon: "consult",
+  },
+] as const;
+
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -13,15 +46,15 @@ export function WhyUsPanel() {
   const [phase, setPhase] = useState<Phase>("hidden");
 
   const steps = useMemo(() => {
-    const titleDurationMs = 1550;
-    const afterTitlePauseMs = 120;
+    const titleDurationMs = 720;
+    const afterTitlePauseMs = 80;
 
-    const frameDurationMs = 520;
-    const afterFramePauseMs = 160;
+    const frameDurationMs = 340;
+    const afterFramePauseMs = 90;
 
-    const lineDurationMs = 1100;
-    const itemStaggerMs = 95;
-    const itemDurationMs = 1300;
+    const lineDurationMs = 700;
+    const itemStaggerMs = 60;
+    const itemDurationMs = 560;
 
     const tTitle = 0;
     const tFrame = tTitle + titleDurationMs + afterTitlePauseMs;
@@ -89,8 +122,8 @@ export function WhyUsPanel() {
       <h2
         className={cx(
           "text-2xl font-bold text-brand-heading",
-          "transition-[opacity,transform] ease-[cubic-bezier(0.2,1,0.2,1)]",
-          titleShown ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
+          "transform-gpu will-change-transform transition-[opacity,transform] ease-[cubic-bezier(0.2,1,0.2,1)]",
+          titleShown ? "translate-x-0 opacity-100" : "translate-x-3 opacity-0",
         )}
         style={{
           transitionDuration: `${steps.titleDurationMs}ms`,
@@ -102,10 +135,10 @@ export function WhyUsPanel() {
       <div
         className={cx(
           "mt-6 overflow-hidden rounded-2xl border border-brand-border bg-brand-elevated/60",
-          "transition-[max-height,opacity,transform,filter,border-color] ease-[cubic-bezier(0.2,1,0.2,1)]",
+          "transform-gpu will-change-transform transition-[opacity,transform] ease-[cubic-bezier(0.2,1,0.2,1)]",
           frameOn
-            ? "max-h-[520px] opacity-100 translate-y-0 border-brand-border"
-            : "pointer-events-none max-h-0 opacity-0 translate-y-2 border-transparent blur-[1px]",
+            ? "opacity-100 translate-y-0 scale-100"
+            : "pointer-events-none opacity-0 translate-y-3 scale-[0.985]",
         )}
         style={
           {
@@ -116,61 +149,30 @@ export function WhyUsPanel() {
       >
         <div
           className={cx(
-            "transition-[opacity,transform] duration-[var(--why-line-dur,1400ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
+            "transition-[opacity] duration-[var(--why-line-dur,900ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
             lineTopOn ? "opacity-100" : "opacity-0",
           )}
         >
           <div
             className={cx(
               "h-px w-full origin-left bg-gradient-to-r from-transparent via-brand-teal/45 to-transparent",
-              "transition-transform duration-[var(--why-line-dur,1400ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
-              lineTopOn ? "scale-x-100" : "scale-x-[0.2]",
+              "transform-gpu transition-transform duration-[var(--why-line-dur,900ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
+              lineTopOn ? "scale-x-100" : "scale-x-[0.35]",
             )}
           />
         </div>
 
         <div className="divide-y divide-brand-border/80 sm:divide-y-0 sm:divide-x sm:divide-brand-border/80">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              {
-                title: "Широкий выбор",
-                subtitle: "высококачественных препаратов",
-                ring: "from-brand-teal/95 to-brand-teal/65",
-                icon: "pills",
-              },
-              {
-                title: "Быстрое оформление",
-                subtitle: "заказа без лишних шагов",
-                ring: "from-brand/95 to-brand-secondary/70",
-                icon: "bag",
-              },
-              {
-                title: "Оперативная доставка",
-                subtitle: "аккуратно и по срокам",
-                ring: "from-emerald-500/90 to-teal-500/70",
-                icon: "delivery",
-              },
-              {
-                title: "Гарантия качества",
-                subtitle: "на весь ассортимент",
-                ring: "from-sky-600/90 to-brand-teal/65",
-                icon: "shield",
-              },
-              {
-                title: "Консультация",
-                subtitle: "по применению и подбору",
-                ring: "from-amber-400/95 to-amber-500/70",
-                icon: "consult",
-              },
-            ].map((item, idx) => {
+            {WHY_US_ITEMS.map((item, idx) => {
               const on = itemsOn;
 
               return (
                 <div
                   key={item.title}
                   className={cx(
-                    "transition-[opacity,transform] ease-[cubic-bezier(0.2,1,0.2,1)]",
-                    on ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4",
+                    "transform-gpu will-change-transform transition-[opacity,transform] ease-[cubic-bezier(0.2,1,0.2,1)]",
+                    on ? "opacity-100 translate-x-0 translate-y-0" : "opacity-0 translate-x-3 translate-y-1",
                   )}
                   style={{
                     transitionDuration: `${steps.itemDurationMs}ms`,
@@ -204,15 +206,15 @@ export function WhyUsPanel() {
 
         <div
           className={cx(
-            "transition-[opacity,transform] duration-[var(--why-line-dur,1400ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
+            "transition-[opacity] duration-[var(--why-line-dur,900ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
             lineBottomOn ? "opacity-100" : "opacity-0",
           )}
         >
           <div
             className={cx(
               "h-px w-full origin-left bg-gradient-to-r from-transparent via-brand-teal/45 to-transparent",
-              "transition-transform duration-[var(--why-line-dur,1400ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
-              lineBottomOn ? "scale-x-100" : "scale-x-[0.2]",
+              "transform-gpu transition-transform duration-[var(--why-line-dur,900ms)] ease-[cubic-bezier(0.2,1,0.2,1)]",
+              lineBottomOn ? "scale-x-100" : "scale-x-[0.35]",
             )}
           />
         </div>

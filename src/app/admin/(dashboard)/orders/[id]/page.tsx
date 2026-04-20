@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
+import { getPricingFromStoredOrder } from "@/lib/pricing";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 
 type Props = { params: Promise<{ id: string }> };
@@ -30,6 +31,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     .from(orderItems)
     .innerJoin(products, eq(orderItems.productId, products.id))
     .where(eq(orderItems.orderId, oid));
+
+  const pricing = getPricingFromStoredOrder({
+    subtotal: order.subtotalAmount,
+    autoDiscountAmount: order.autoDiscountAmount,
+    promoCode: order.promoCode,
+    promoDiscountAmount: order.promoDiscountAmount,
+    promoDiscountPercent: order.promoDiscountPercent,
+    totalAmount: order.totalAmount,
+  });
 
   return (
     <div>
@@ -89,9 +99,28 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         </div>
         <div className="rounded-xl border border-brand-border p-5">
           <h2 className="text-sm font-semibold text-brand-muted">Итого</h2>
-          <p className="mt-2 text-xl font-bold text-brand">
-            {formatPrice(order.totalAmount)}
-          </p>
+          <div className="mt-2 space-y-2 text-sm">
+            <p className="flex justify-between gap-4 text-brand-muted">
+              <span>Сумма товаров</span>
+              <span>{formatPrice(pricing.subtotal)}</span>
+            </p>
+            {pricing.autoDiscountAmount > 0 && (
+              <p className="flex justify-between gap-4 font-medium text-brand">
+                <span>Скидка по сумме {pricing.autoDiscountRate}%</span>
+                <span>-{formatPrice(pricing.autoDiscountAmount)}</span>
+              </p>
+            )}
+            {pricing.promoDiscountAmount > 0 && (
+              <p className="flex justify-between gap-4 font-medium text-brand">
+                <span>Промокод {pricing.appliedPromoCode} ({pricing.promoDiscountPercent}%)</span>
+                <span>-{formatPrice(pricing.promoDiscountAmount)}</span>
+              </p>
+            )}
+            <p className="flex justify-between gap-4 text-xl font-bold text-brand">
+              <span>Итого</span>
+              <span>{formatPrice(pricing.finalTotal)}</span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -117,6 +146,44 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr className="border-t border-brand-border">
+              <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                Сумма товаров
+              </td>
+              <td className="px-4 py-2 text-brand-heading">
+                {formatPrice(pricing.subtotal)}
+              </td>
+            </tr>
+            {pricing.autoDiscountAmount > 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                  Скидка по сумме {pricing.autoDiscountRate}%
+                </td>
+                <td className="px-4 py-2 font-medium text-brand">
+                  -{formatPrice(pricing.autoDiscountAmount)}
+                </td>
+              </tr>
+            )}
+            {pricing.promoDiscountAmount > 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                  Промокод {pricing.appliedPromoCode} ({pricing.promoDiscountPercent}%)
+                </td>
+                <td className="px-4 py-2 font-medium text-brand">
+                  -{formatPrice(pricing.promoDiscountAmount)}
+                </td>
+              </tr>
+            )}
+            <tr>
+              <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                Итого
+              </td>
+              <td className="px-4 py-2 font-bold text-brand">
+                {formatPrice(pricing.finalTotal)}
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>

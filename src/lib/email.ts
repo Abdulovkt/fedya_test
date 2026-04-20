@@ -201,3 +201,55 @@ export async function sendNewMessageEmail({
     `,
   });
 }
+
+export async function sendPromoCodeAnnouncementEmail({
+  to,
+  customerName,
+  code,
+  discountPercent,
+  startsAt,
+  endsAt,
+  productNames,
+  appliesToAll,
+}: {
+  to: string;
+  customerName: string;
+  code: string;
+  discountPercent: number;
+  startsAt: Date;
+  endsAt: Date;
+  productNames: string[];
+  appliesToAll: boolean;
+}) {
+  const transporter = await getTransporter();
+  if (!transporter) return;
+
+  const from = await getFrom();
+  const productsText = appliesToAll
+    ? "Промокод действует на все товары магазина."
+    : `Промокод действует на товары: ${productNames.join(", ")}.`;
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: `Промокод ${code} — скидка ${discountPercent}%`,
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
+        <h2 style="color:#e02c5c">Для вас действует новый промокод</h2>
+        <p>Здравствуйте, <strong>${customerName}</strong>!</p>
+        <p>
+          Для вас доступен промокод <strong>${code}</strong> со скидкой
+          <strong> ${discountPercent}%</strong>.
+        </p>
+        <p>${productsText}</p>
+        <p>
+          Срок действия: с <strong>${startsAt.toLocaleString("ru-RU")}</strong>
+          до <strong>${endsAt.toLocaleString("ru-RU")}</strong>.
+        </p>
+        <p style="margin-top:24px;font-size:13px;color:#7d879c">
+          Промокод можно использовать один раз на один email.
+        </p>
+      </div>
+    `,
+  });
+}

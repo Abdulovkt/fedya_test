@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { CheckoutForm } from "@/components/shop/CheckoutForm";
+import { DiscountInfo } from "@/components/shop/DiscountInfo";
+import { PromoCodeForm } from "@/components/shop/PromoCodeForm";
 import { formatPrice } from "@/lib/format";
-import { getCartLines } from "@/lib/cart";
+import { getCartLines, getCartPromoCode } from "@/lib/cart";
+import { getCartPricing } from "@/lib/pricing";
+import { getPromoValidationError } from "@/lib/promocodes";
 
 export const metadata = { title: "Оформление заказа" };
 
 export default async function CheckoutPage() {
   const lines = await getCartLines();
-  const total = lines.reduce((s, l) => s + l.price * l.quantity, 0);
+  const rawPromo = await getCartPromoCode();
+  const promoError = rawPromo ? getPromoValidationError(lines, rawPromo) : null;
+  const appliedPromo = promoError ? null : rawPromo;
+  const pricing = getCartPricing(lines, appliedPromo);
 
   if (lines.length === 0) {
     return (
@@ -30,9 +37,20 @@ export default async function CheckoutPage() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-brand-heading">Оформление заказа</h1>
       <div className="mt-8 grid gap-10 lg:grid-cols-2">
-        <CheckoutForm />
+        <CheckoutForm promoCode={rawPromo?.code ?? null} />
         <div>
           <h2 className="text-lg font-semibold text-brand-heading">Состав заказа</h2>
+          <DiscountInfo compact className="mt-4" />
+          <div className="mt-4">
+            <PromoCodeForm
+              appliedPromoCode={rawPromo?.code ?? null}
+              promoDiscountPercent={pricing.promoDiscountPercent}
+              promoDiscountAmount={pricing.promoDiscountAmount}
+              availableAutoDiscountAmount={pricing.availableAutoDiscountAmount}
+              autoDiscountRate={pricing.autoDiscountRate}
+              promoError={promoError}
+            />
+          </div>
           <ul className="mt-4 space-y-2 text-sm text-brand-muted">
             {lines.map((l) => (
               <li key={l.itemId} className="flex justify-between gap-4">
@@ -43,10 +61,38 @@ export default async function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 border-t border-brand-border pt-4 text-lg text-brand-heading">
-            К оплате:{" "}
-            <span className="font-bold text-brand">{formatPrice(total)}</span>
-          </p>
+          <div className="mt-4 space-y-2 border-t border-brand-border pt-4">
+            <p className="flex justify-between gap-4 text-sm text-brand-muted">
+              <span>Сумма товаров</span>
+              <span>{formatPrice(pricing.subtotal)}</span>
+            </p>
+            {pricing.appliedDiscountMode === "auto" && (
+              <>
+                <p className="flex justify-between gap-4 text-sm font-medium text-brand">
+                  <span>Скидка {pricing.autoDiscountRate}%</span>
+                  <span>-{formatPrice(pricing.autoDiscountAmount)}</span>
+                </p>
+                <p className="text-sm text-brand-muted">
+                  Скидка применена автоматически по сумме заказа.
+                </p>
+              </>
+            )}
+            {pricing.appliedDiscountMode === "promo" && (
+              <>
+                <p className="flex justify-between gap-4 text-sm font-medium text-brand">
+                  <span>Промокод {pricing.appliedPromoCode}</span>
+                  <span>-{formatPrice(pricing.promoDiscountAmount)}</span>
+                </p>
+                <p className="text-sm text-brand-muted">
+                  Автоматическая скидка по сумме заказа отключена, пока активен промокод.
+                </p>
+              </>
+            )}
+            <p className="flex justify-between gap-4 text-lg text-brand-heading">
+              <span>К оплате</span>
+              <span className="font-bold text-brand">{formatPrice(pricing.finalTotal)}</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

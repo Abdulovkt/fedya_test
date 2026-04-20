@@ -44,6 +44,12 @@ export default async function AdminDashboardLayout({
             Заказы
           </Link>
           <Link
+            href="/admin/promocodes"
+            className="rounded-md px-2 py-1.5 text-brand-heading hover:bg-brand-elevated"
+          >
+            Промокоды
+          </Link>
+          <Link
             href="/admin/chats"
             className="rounded-md px-2 py-1.5 text-brand-heading hover:bg-brand-elevated"
           >
