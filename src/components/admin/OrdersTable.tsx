@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Fragment, useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { getPricingFromStoredOrder } from "@/lib/pricing";
-import { getStatusMeta } from "@/lib/order-statuses";
+import { getPaymentStatusMeta, getStatusMeta } from "@/lib/order-statuses";
+import { AdminSyncPaymentButton } from "@/components/admin/AdminSyncPaymentButton";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 
 type OrderItem = {
@@ -18,6 +19,10 @@ type Order = {
   publicOrderNumber: string | null;
   createdAt: Date | null;
   status: string;
+  paymentStatus: string;
+  paymentFailureReason: string | null;
+  paypassStatus: string | null;
+  paypassLastCheckedAt: Date | null;
   customerName: string;
   phone: string;
   email: string;
@@ -46,14 +51,24 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
             <th className="px-4 py-3">Дата</th>
             <th className="px-4 py-3">Клиент</th>
             <th className="px-4 py-3">Сумма</th>
-            <th className="px-4 py-3">Статус</th>
+            <th className="px-4 py-3">Оплата</th>
+            <th className="px-4 py-3" title="Статус обработки заказа">
+              Статус
+            </th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o) => {
             const isOpen = openId === o.id;
             const meta = getStatusMeta(o.status);
+            const payMeta = getPaymentStatusMeta(o.paymentStatus);
             const displayOrderNumber = o.publicOrderNumber ?? `#${o.id}`;
+            const paypassChecked =
+              o.paypassLastCheckedAt instanceof Date
+                ? o.paypassLastCheckedAt.toLocaleString("ru-RU")
+                : o.paypassLastCheckedAt
+                  ? new Date(o.paypassLastCheckedAt).toLocaleString("ru-RU")
+                  : null;
             const pricing = getPricingFromStoredOrder({
               subtotal: o.subtotalAmount,
               autoDiscountAmount: o.autoDiscountAmount,
@@ -91,6 +106,13 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <span
+                      className={`inline-flex w-fit rounded-full border px-2.5 py-0.5 text-xs font-medium ${payMeta.color}`}
+                    >
+                      {payMeta.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
                       className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${meta.color}`}
                     >
                       {meta.label}
@@ -100,15 +122,51 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
 
                 {isOpen && (
                   <tr className="border-t border-brand-border bg-brand-elevated">
-                    <td colSpan={6} className="px-6 py-5">
-                      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+                    <td colSpan={7} className="px-6 py-5">
+                      <div className="mb-4 rounded-lg border border-brand-border bg-brand-surface/60 px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-brand-muted">
+                          Оплата
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${payMeta.color}`}
+                          >
+                            {payMeta.label}
+                          </span>
+                          {o.paypassStatus ? (
+                            <span className="text-xs text-brand-muted">
+                              PayPass: {o.paypassStatus}
+                            </span>
+                          ) : null}
+                        </div>
+                        {o.paymentFailureReason && o.paymentStatus !== "paid" ? (
+                          <p className="mt-2 text-xs text-brand-muted">
+                            Причина: {o.paymentFailureReason}
+                          </p>
+                        ) : null}
+                        {paypassChecked ? (
+                          <p className="mt-1 text-xs text-brand-muted">
+                            Синхронизация с PayPass: {paypassChecked}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div
+                        className="mb-6 flex flex-wrap items-start justify-between gap-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <OrderStatusChanger orderId={o.id} current={o.status} />
-                        <Link
-                          href={`/admin/chats/${o.id}`}
-                          className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium text-brand hover:border-brand/40 hover:bg-brand hover:text-white"
-                        >
-                          Открыть чат
-                        </Link>
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+                          <Link
+                            href={`/admin/chats/${o.id}`}
+                            className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-center text-sm font-medium text-brand hover:border-brand/40 hover:bg-brand hover:text-white sm:min-w-[12.5rem]"
+                          >
+                            Открыть чат
+                          </Link>
+                          <AdminSyncPaymentButton
+                            orderId={o.id}
+                            className="w-full sm:min-w-[12.5rem]"
+                          />
+                        </div>
                       </div>
                       <div className="grid gap-6 sm:grid-cols-2">
                         {/* Customer info */}

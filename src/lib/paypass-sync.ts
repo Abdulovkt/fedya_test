@@ -58,7 +58,26 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
     return { orderId, updated: false, skipped: true, reason: "order_not_found" };
   }
 
-  if (order.paymentStatus === "paid" || order.paymentStatus === "failed") {
+  if (order.paymentStatus === "failed") {
+    return { orderId, updated: false, skipped: true, reason: "already_final" };
+  }
+
+  if (order.paymentStatus === "paid") {
+    if (order.status === "new") {
+      await db
+        .update(orders)
+        .set({
+          status: "processing",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+      return {
+        orderId,
+        updated: true,
+        skipped: false,
+        reason: "paid_bump_new_to_processing",
+      };
+    }
     return { orderId, updated: false, skipped: true, reason: "already_final" };
   }
 
@@ -132,7 +151,9 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
     const nextOrderStatus =
       localStatus === "failed" && CANCELLABLE_ORDER_STATUSES.has(order.status)
         ? "cancelled"
-        : order.status;
+        : localStatus === "paid" && order.status === "new"
+          ? "processing"
+          : order.status;
 
     await db
       .update(orders)

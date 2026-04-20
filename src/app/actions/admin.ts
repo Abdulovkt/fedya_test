@@ -408,14 +408,25 @@ export async function updateOrderStatus(formData: FormData) {
   }
 }
 
+function revalidateOrderPaymentViews(orderId: number) {
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/checkout/success");
+}
+
 export async function syncOrderPaymentStatus(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("orderId"));
   if (!Number.isFinite(id)) return;
 
   await syncOrderPaymentStatusById(id);
+  revalidateOrderPaymentViews(id);
+}
 
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
-  revalidatePath("/checkout/success");
+export async function syncOrderPaymentStatusForOrder(orderId: number) {
+  await requireAdmin();
+  if (!Number.isFinite(orderId)) return;
+
+  await syncOrderPaymentStatusById(orderId);
+  revalidateOrderPaymentViews(orderId);
 }

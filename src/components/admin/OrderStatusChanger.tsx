@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { ORDER_STATUSES } from "@/lib/order-statuses";
 import { updateOrderStatus } from "@/app/actions/admin";
 
@@ -14,6 +14,10 @@ const NEEDS_MESSAGE = "shipped";
 export function OrderStatusChanger({ orderId, current }: Props) {
   const [optimistic, setOptimistic] = useState(current);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setOptimistic(current);
+  }, [current]);
   // Which status is awaiting confirmation (needs a message)
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [message, setMessage] = useState("");

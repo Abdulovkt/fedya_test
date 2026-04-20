@@ -5,10 +5,11 @@ import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
 import { getPricingFromStoredOrder } from "@/lib/pricing";
+import { AdminSyncPaymentButton } from "@/components/admin/AdminSyncPaymentButton";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
-import { syncOrderPaymentStatus } from "@/app/actions/admin";
 import { getDisplayOrderNumber } from "@/lib/order-number";
+import { getPaymentStatusMeta } from "@/lib/order-statuses";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -54,14 +55,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     totalAmount: order.totalAmount,
   });
 
-  const paymentMeta =
-    order.paymentStatus === "paid"
-      ? { label: "Оплачен", tone: "bg-green-50 border-green-200 text-green-700" }
-      : order.paymentStatus === "failed"
-        ? { label: "Оплата отклонена", tone: "bg-red-50 border-red-200 text-red-700" }
-        : order.paymentStatus === "pending"
-          ? { label: "Ожидает оплату", tone: "bg-yellow-50 border-yellow-200 text-yellow-700" }
-          : { label: "Не оплачен", tone: "bg-brand-elevated border-brand-border text-brand-muted" };
+  const paymentMeta = getPaymentStatusMeta(order.paymentStatus);
   const displayOrderNumber = getDisplayOrderNumber(order);
 
   return (
@@ -99,7 +93,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             <div>
               <h2 className="text-sm font-semibold text-brand-muted">Оплата</h2>
               <p
-                className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentMeta.tone}`}
+                className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentMeta.color}`}
               >
                 {paymentMeta.label}
               </p>
@@ -130,15 +124,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                   Открыть ссылку оплаты
                 </a>
               ) : null}
-              <form action={syncOrderPaymentStatus}>
-                <input type="hidden" name="orderId" value={order.id} />
-                <button
-                  type="submit"
-                  className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-hover"
-                >
-                  Обновить статус оплаты
-                </button>
-              </form>
+              <AdminSyncPaymentButton orderId={order.id} />
             </div>
           </div>
         </div>

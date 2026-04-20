@@ -20,3 +20,34 @@ export function getStatusMeta(status: string) {
     }
   );
 }
+
+export function getPaymentStatusMeta(paymentStatus: string) {
+  if (paymentStatus === "paid") {
+    return {
+      label: "Оплачен",
+      color: "bg-green-50 text-green-700 border-green-200",
+    };
+  }
+  if (paymentStatus === "failed") {
+    return {
+      label: "Оплата отклонена",
+      color: "bg-red-50 text-red-700 border-red-200",
+    };
+  }
+  if (paymentStatus === "pending") {
+    return {
+      label: "Ожидает оплату",
+      color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    };
+  }
+  if (paymentStatus === "unpaid") {
+    return {
+      label: "Не оплачен",
+      color: "bg-brand-elevated text-brand-muted border-brand-border",
+    };
+  }
+  return {
+    label: paymentStatus,
+    color: "bg-brand-elevated text-brand-muted border-brand-border",
+  };
+}
