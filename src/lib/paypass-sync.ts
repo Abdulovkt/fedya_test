@@ -6,7 +6,11 @@ import {
   getPayPassRequest,
   mapPayPassStatusToLocal,
 } from "@/lib/paypass";
-import { buildPublicPayPassClientRequestId } from "@/lib/order-number";
+import { sendOrderStatusEmail } from "@/lib/email";
+import {
+  buildPublicPayPassClientRequestId,
+  getDisplayOrderNumber,
+} from "@/lib/order-number";
 
 const PAYPASS_TTL_MS = 48 * 60 * 60 * 1000;
 const CANCELLABLE_ORDER_STATUSES = new Set(["new", "processing", "assembled"]);
@@ -36,6 +40,30 @@ function isExpired(createdAt: Date | null, nowMs: number) {
   return nowMs - createdAt.getTime() > PAYPASS_TTL_MS;
 }
 
+function emailCustomerProcessingAfterPayment(order: {
+  id: number;
+  email: string;
+  customerName: string;
+  chatToken: string | null;
+  publicOrderNumber: string | null;
+}) {
+  if (!order.chatToken) return;
+  const orderNumber = getDisplayOrderNumber({
+    id: order.id,
+    publicOrderNumber: order.publicOrderNumber,
+  });
+  sendOrderStatusEmail({
+    to: order.email,
+    customerName: order.customerName,
+    orderId: order.id,
+    orderNumber,
+    orderRef: order.publicOrderNumber ?? String(order.id),
+    chatToken: order.chatToken,
+    status: "processing",
+    message: "Оплата получена, заказ принят в обработку.",
+  }).catch(() => {});
+}
+
 export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncOrderPaymentResult> {
   const [order] = await db
     .select({
@@ -49,6 +77,8 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
       totalAmount: orders.totalAmount,
       customerName: orders.customerName,
       phone: orders.phone,
+      email: orders.email,
+      chatToken: orders.chatToken,
     })
     .from(orders)
     .where(eq(orders.id, orderId))
@@ -71,6 +101,7 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
           updatedAt: new Date(),
         })
         .where(eq(orders.id, orderId));
+      emailCustomerProcessingAfterPayment(order);
       return {
         orderId,
         updated: true,
@@ -174,6 +205,9 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
         updatedAt: new Date(),
       })
       .where(eq(orders.id, orderId));
+    if (localStatus === "paid" && order.status === "new" && nextOrderStatus === "processing") {
+      emailCustomerProcessingAfterPayment(order);
+    }
     return { orderId, updated: true, skipped: false };
   } catch (error) {
     return {

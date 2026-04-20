@@ -7,11 +7,12 @@ import { updateOrderStatus } from "@/app/actions/admin";
 interface Props {
   orderId: number;
   current: string;
+  paymentStatus: string;
 }
 
 const NEEDS_MESSAGE = "shipped";
 
-export function OrderStatusChanger({ orderId, current }: Props) {
+export function OrderStatusChanger({ orderId, current, paymentStatus }: Props) {
   const [optimistic, setOptimistic] = useState(current);
   const [isPending, startTransition] = useTransition();
 
@@ -63,15 +64,24 @@ export function OrderStatusChanger({ orderId, current }: Props) {
       <div className="flex flex-wrap gap-2">
         {ORDER_STATUSES.map((s) => {
           const active = optimistic === s.value;
+          const newLocked = s.value === "new" && paymentStatus === "paid";
           return (
             <button
               key={s.value}
               type="button"
+              disabled={newLocked}
+              title={
+                newLocked
+                  ? "После оплаты нельзя вернуть заказ в статус «Новый»"
+                  : undefined
+              }
               onClick={() => handleClick(s.value)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                active
-                  ? `${s.color} ring-2 ring-offset-1 ring-current`
-                  : "border-brand-border bg-brand-elevated text-brand-muted hover:border-current hover:text-brand-heading"
+                newLocked
+                  ? "cursor-not-allowed border-brand-border bg-brand-elevated/60 text-brand-muted/50"
+                  : active
+                    ? `${s.color} ring-2 ring-offset-1 ring-current`
+                    : "border-brand-border bg-brand-elevated text-brand-muted hover:border-current hover:text-brand-heading"
               }`}
             >
               {s.label}

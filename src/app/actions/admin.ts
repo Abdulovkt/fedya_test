@@ -362,6 +362,7 @@ export async function updateOrderStatus(formData: FormData) {
   const [order] = await db
     .select({
       status: orders.status,
+      paymentStatus: orders.paymentStatus,
       email: orders.email,
       customerName: orders.customerName,
       chatToken: orders.chatToken,
@@ -372,6 +373,10 @@ export async function updateOrderStatus(formData: FormData) {
     .limit(1);
 
   if (!order || order.status === status) return;
+
+  if (status === "new" && order.paymentStatus === "paid") {
+    return;
+  }
 
   await db
     .update(orders)

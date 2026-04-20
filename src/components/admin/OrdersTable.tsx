@@ -154,7 +154,11 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                         className="mb-6 flex flex-wrap items-start justify-between gap-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <OrderStatusChanger orderId={o.id} current={o.status} />
+                        <OrderStatusChanger
+                          orderId={o.id}
+                          current={o.status}
+                          paymentStatus={o.paymentStatus}
+                        />
                         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
                           <Link
                             href={`/admin/chats/${o.id}`}
