@@ -27,6 +27,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     | undefined;
 
   if (canLoadOrder) {
+    const resolvedOrderId = orderId as number;
     [orderRecord] = await db
       .select({
         id: orders.id,
@@ -37,7 +38,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         paypassTelegramLink: orders.paypassTelegramLink,
       })
       .from(orders)
-      .where(eq(orders.id, orderId))
+      .where(eq(orders.id, resolvedOrderId))
       .limit(1);
 
     const isValidToken = Boolean(orderRecord && token && orderRecord.chatToken === token);
@@ -46,24 +47,24 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       orderRecord &&
       (orderRecord.paymentStatus === "pending" || orderRecord.paymentStatus === "unpaid")
     ) {
-      await syncOrderPaymentStatusById(orderId);
+      await syncOrderPaymentStatusById(resolvedOrderId);
       [orderRecord] = await db
         .select({
           id: orders.id,
-        publicOrderNumber: orders.publicOrderNumber,
+          publicOrderNumber: orders.publicOrderNumber,
           chatToken: orders.chatToken,
           paymentStatus: orders.paymentStatus,
           paymentFailureReason: orders.paymentFailureReason,
           paypassTelegramLink: orders.paypassTelegramLink,
         })
         .from(orders)
-        .where(eq(orders.id, orderId))
+        .where(eq(orders.id, resolvedOrderId))
         .limit(1);
     }
   }
 
   const isTokenValid = Boolean(orderRecord && token && orderRecord.chatToken === token);
-  const paymentLink = isTokenValid ? orderRecord.paypassTelegramLink : null;
+  const paymentLink = isTokenValid && orderRecord ? orderRecord.paypassTelegramLink : null;
   const qrUrl = paymentLink
     ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(paymentLink)}`
     : null;

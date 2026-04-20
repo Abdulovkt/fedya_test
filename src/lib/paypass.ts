@@ -53,9 +53,10 @@ export type CreatePayPassRequestResult = {
   createdAtRaw: string | null;
 };
 
-export type PayPassRequestLookup =
-  | { publicId: string; clientRequestId?: never }
-  | { publicId?: never; clientRequestId: string };
+export type PayPassRequestLookup = {
+  publicId?: string;
+  clientRequestId?: string;
+};
 
 export type PayPassRequestResult = {
   publicId: string | null;
@@ -184,10 +185,14 @@ export async function createPayPassRequest(
 export async function getPayPassRequest(
   lookup: PayPassRequestLookup,
 ): Promise<PayPassRequestResult> {
-  const query =
-    "publicId" in lookup
-      ? `?public_id=${encodeURIComponent(lookup.publicId)}`
-      : `?client_request_id=${encodeURIComponent(lookup.clientRequestId)}`;
+  let query = "";
+  if (lookup.publicId) {
+    query = `?public_id=${encodeURIComponent(lookup.publicId)}`;
+  } else if (lookup.clientRequestId) {
+    query = `?client_request_id=${encodeURIComponent(lookup.clientRequestId)}`;
+  } else {
+    throw new Error("publicId or clientRequestId is required");
+  }
 
   const data = await fetchPayPass<PayPassGetResponse>(
     [`/api_get_request.php${query}`, `/merch/api_get_request.php${query}`],

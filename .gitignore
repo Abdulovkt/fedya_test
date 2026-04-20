@@ -35,6 +35,10 @@ yarn-error.log*
 
 # sqlite / uploads
 *.db
+# WAL mode sidecars (not matched by *.db)
+*.db-wal
+*.db-shm
+/dev.db
 public/uploads/*
 !public/uploads/.gitkeep
 
