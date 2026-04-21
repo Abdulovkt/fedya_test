@@ -54,10 +54,12 @@ export default async function CheckoutPage() {
           <ul className="mt-4 space-y-2 text-sm text-brand-muted">
             {lines.map((l) => (
               <li key={l.itemId} className="flex justify-between gap-4">
-                <span className="text-brand-heading">
+                <span className="min-w-0 flex-1 break-words text-brand-heading">
                   {l.name} × {l.quantity}
                 </span>
-                <span>{formatPrice(l.price * l.quantity)}</span>
+                <span className="shrink-0 tabular-nums">
+                  {formatPrice(l.price * l.quantity)}
+                </span>
               </li>
             ))}
           </ul>

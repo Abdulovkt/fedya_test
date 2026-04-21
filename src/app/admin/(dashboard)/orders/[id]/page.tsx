@@ -151,7 +151,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             </p>
           ) : null}
           {order.address ? (
-            <p className="mt-2 text-sm text-brand-heading">{order.address}</p>
+            <p className="mt-2 min-w-0 break-words text-sm text-brand-heading">
+              {order.address}
+            </p>
           ) : null}
           {order.comment ? (
             <p className="mt-2 text-sm text-brand-muted">
@@ -199,7 +201,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <tbody>
             {items.map((row, i) => (
               <tr key={`${row.productId}-${i}`} className="border-t border-brand-border">
-                <td className="px-4 py-2 text-brand-heading">{row.productName}</td>
+                <td className="max-w-[12rem] px-4 py-2 break-words text-brand-heading sm:max-w-none">
+                  {row.productName}
+                </td>
                 <td className="px-4 py-2">{row.quantity}</td>
                 <td className="px-4 py-2">{formatPrice(row.priceAtOrder)}</td>
                 <td className="px-4 py-2">

@@ -61,7 +61,7 @@ export default async function CartPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/product/${line.slug}`}
-                    className="font-medium text-brand-heading hover:text-brand-secondary"
+                    className="break-words font-medium text-brand-heading hover:text-brand-secondary"
                   >
                     {line.name}
                   </Link>

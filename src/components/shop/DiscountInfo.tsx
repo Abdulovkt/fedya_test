@@ -36,14 +36,23 @@ export function DiscountInfo({
       <div
         className={`rounded-xl border border-brand-teal/30 bg-brand-teal/10 px-3 py-2 text-xs text-brand-heading sm:text-sm ${className}`}
       >
-        <span className="font-semibold">Скидки по сумме заказа:</span>{" "}
-        {rules.map((rule, index) => (
-          <span key={rule.percent}>
-            {index > 0 ? " " : ""}
-            {getRangeLabel(index)} - {rule.percent}%
-            {index < rules.length - 1 ? ";" : "."}
-          </span>
-        ))}
+        <p className="font-semibold">Скидки по сумме заказа:</p>
+        <ul className="mt-1.5 space-y-0.5 sm:hidden">
+          {rules.map((rule, index) => (
+            <li key={rule.percent}>
+              {getRangeLabel(index)} - {rule.percent}%
+            </li>
+          ))}
+        </ul>
+        <p className="mt-1.5 hidden sm:block">
+          {rules.map((rule, index) => (
+            <span key={rule.percent}>
+              {index > 0 ? " " : ""}
+              {getRangeLabel(index)} - {rule.percent}%
+              {index < rules.length - 1 ? ";" : "."}
+            </span>
+          ))}
+        </p>
       </div>
     );
   }

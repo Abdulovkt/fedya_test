@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import { auth } from "@/auth";
 import { Providers } from "./providers";
@@ -26,6 +26,11 @@ export const metadata: Metadata = {
     template: "%s — SportNutrition",
   },
   description: "Интернет-магазин спортивного питания с доставкой.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({

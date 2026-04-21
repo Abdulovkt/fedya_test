@@ -28,7 +28,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-brand-border bg-brand-bg px-4 py-8 sm:px-6 lg:px-8">
+      <section className="border-b border-brand-border bg-brand-bg px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl border border-brand-teal/40">
           <Image
             src={REFERENCE_HERO_IMAGE}
@@ -39,20 +39,20 @@ export default async function HomePage() {
             sizes="(max-width: 1280px) 100vw, 1280px"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/20" />
-          <div className="relative flex flex-col items-start justify-center px-8 py-24 sm:px-12 sm:py-32 lg:px-16 lg:py-40">
-            <h1 className="max-w-xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-5xl">
+          <div className="relative flex flex-col items-start justify-center px-6 py-16 sm:px-12 sm:py-32 lg:px-16 lg:py-40">
+            <h1 className="max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
               Интернет-магазин
               <br />
               Спортивного питания
             </h1>
-            <p className="mt-4 max-w-sm text-base text-white/80">
+            <p className="mt-4 max-w-sm text-sm text-white/80 sm:text-base">
               Купите спортпит с доставкой из России.
               <br />
               Большой выбор, лучшие цены.
             </p>
             <Link
               href="/catalog"
-              className="mt-8 inline-flex rounded-md bg-brand-teal px-8 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-brand-teal/80"
+              className="mt-8 inline-flex w-full justify-center rounded-md bg-brand-teal px-8 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-brand-teal/80 sm:w-auto"
             >
               Смотреть каталог
             </Link>
@@ -60,13 +60,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <WhyUsPanel />
-      </section>
+      <div className="flex flex-col">
+        <section className="order-3 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:order-2 lg:px-8">
+          <WhyUsPanel />
+        </section>
 
-      <StoryBlocks />
+        <div className="order-4 lg:order-3">
+          <StoryBlocks />
+        </div>
 
-      <section className="mx-auto max-w-7xl px-4 pt-2 pb-14 sm:px-6 lg:px-8">
+        <section className="order-2 mx-auto max-w-7xl px-4 pt-2 pb-14 sm:px-6 lg:order-4 lg:px-8">
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-2xl font-bold text-brand-heading">Новинки</h2>
           <Link
@@ -92,7 +95,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-brand-border bg-brand-elevated px-4 py-12 sm:px-6 lg:px-8">
+      <section className="order-5 border-t border-brand-border bg-brand-elevated px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-2xl font-bold text-brand-heading">Отзывы</h2>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
@@ -123,6 +126,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

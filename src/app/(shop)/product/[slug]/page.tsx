@@ -39,14 +39,16 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <nav className="text-sm text-brand-muted">
+      <nav className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-brand-muted sm:text-sm">
         <Link href="/catalog" className="hover:text-brand-teal">
           Каталог
         </Link>
-        <span className="mx-2">/</span>
+        <span className="text-brand-muted/60" aria-hidden="true">
+          /
+        </span>
         <Link
           href={`/category/${row.categorySlug}`}
-          className="hover:text-brand-teal"
+          className="min-w-0 break-words hover:text-brand-teal"
         >
           {row.categoryName}
         </Link>
@@ -73,8 +75,10 @@ export default async function ProductPage({ params }: Props) {
           <p className="text-sm uppercase tracking-wide text-brand-muted">
             {row.categoryName}
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-brand-heading">{p.name}</h1>
-          <p className="mt-4 text-3xl font-bold text-brand">
+          <h1 className="mt-2 text-2xl font-bold text-brand-heading sm:text-3xl">
+            {p.name}
+          </h1>
+          <p className="mt-4 text-2xl font-bold text-brand sm:text-3xl">
             {formatPrice(p.price)}
           </p>
           <div className="mt-4 flex items-center gap-3">

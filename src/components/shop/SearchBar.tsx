@@ -29,12 +29,12 @@ export function SearchBar({ categories }: { categories: Category[] }) {
   return (
     <form
       onSubmit={submit}
-      className="flex w-full max-w-xl overflow-hidden rounded-xl border border-brand-border bg-brand-elevated shadow-sm transition focus-within:border-brand-teal focus-within:ring-1 focus-within:ring-brand-teal"
+      className="flex w-full max-w-none flex-col overflow-hidden rounded-xl border border-brand-border bg-brand-elevated shadow-sm transition focus-within:border-brand-teal focus-within:ring-1 focus-within:ring-brand-teal sm:max-w-xl sm:flex-row"
     >
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="shrink-0 cursor-pointer border-r border-brand-border bg-transparent py-2.5 pl-3 pr-2 text-sm text-brand-muted outline-none hover:text-brand-heading"
+        className="w-full cursor-pointer border-b border-brand-border bg-transparent py-2.5 pl-3 pr-2 text-sm text-brand-muted outline-none hover:text-brand-heading sm:max-w-[min(100%,11rem)] sm:shrink-0 sm:border-b-0 sm:border-r"
       >
         <option value="">Все категории</option>
         {categories.map((c) => (
@@ -44,20 +44,21 @@ export function SearchBar({ categories }: { categories: Category[] }) {
         ))}
       </select>
 
-      <input
-        ref={inputRef}
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Поиск..."
-        className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-brand-heading placeholder:text-brand-muted/60 outline-none"
-      />
+      <div className="flex min-w-0 flex-1">
+        <input
+          ref={inputRef}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Поиск..."
+          className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-brand-heading placeholder:text-brand-muted/60 outline-none"
+        />
 
-      <button
-        type="submit"
-        aria-label="Найти"
-        className="flex items-center px-3 text-brand-muted transition hover:text-brand-teal"
-      >
+        <button
+          type="submit"
+          aria-label="Найти"
+          className="flex shrink-0 items-center px-3 text-brand-muted transition hover:text-brand-teal"
+        >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="18"
@@ -72,7 +73,8 @@ export function SearchBar({ categories }: { categories: Category[] }) {
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-      </button>
+        </button>
+      </div>
     </form>
   );
 }
