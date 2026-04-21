@@ -17,6 +17,7 @@ type Props = {
     slug: string;
     description: string | null;
     priceKopecks: number;
+    costKopecks: number;
     stock: number;
     isActive: boolean;
     imageUrl: string | null;
@@ -26,6 +27,7 @@ type Props = {
 export function ProductForm({ categories, mode, product }: Props) {
   const router = useRouter();
   const priceRub = product ? product.priceKopecks / 100 : "";
+  const costRub = product ? product.costKopecks / 100 : "";
 
   const [editState, editAction, editPending] = useActionState<UpdateProductState, FormData>(
     updateProduct,
@@ -153,19 +155,37 @@ export function ProductForm({ categories, mode, product }: Props) {
           />
         </div>
         <div>
-          <label htmlFor="stock" className="text-sm text-brand-muted">
-            Остаток
+          <label htmlFor="costRub" className="text-sm text-brand-muted">
+            Себестоимость за ед. (₽)
           </label>
           <input
-            id="stock"
-            name="stock"
+            id="costRub"
+            name="costRub"
             type="number"
+            step="0.01"
             min="0"
-            required
-            defaultValue={product?.stock ?? 0}
+            defaultValue={product ? (costRub === "" ? 0 : costRub) : 0}
             className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
           />
+          <p className="mt-1 text-xs text-brand-muted">
+            Для отчёта о прибыли; если 0 — в отчёте только выручка по позиции.
+          </p>
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="stock" className="text-sm text-brand-muted">
+          Остаток
+        </label>
+        <input
+          id="stock"
+          name="stock"
+          type="number"
+          min="0"
+          required
+          defaultValue={product?.stock ?? 0}
+          className="mt-1 w-full max-w-xs rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+        />
       </div>
 
       {/* Image upload */}

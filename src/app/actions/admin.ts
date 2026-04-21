@@ -80,6 +80,11 @@ const productSchema = z.object({
   slug: z.string().optional(),
   description: z.string().optional(),
   priceRub: z.coerce.number().positive(),
+  /** Себестоимость за единицу, ₽ (может быть 0). */
+  costRub: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? 0 : v),
+    z.coerce.number().min(0),
+  ),
   stock: z.coerce.number().int().min(0),
 });
 
@@ -105,6 +110,7 @@ export async function createProduct(formData: FormData) {
     slug: formData.get("slug")?.toString(),
     description: formData.get("description")?.toString(),
     priceRub: formData.get("priceRub"),
+    costRub: formData.get("costRub"),
     stock: formData.get("stock"),
   });
   if (!parsed.success) return;
@@ -120,11 +126,13 @@ export async function createProduct(formData: FormData) {
     slug,
     description: parsed.data.description?.trim() || null,
     price: Math.round(parsed.data.priceRub * 100),
+    cost: Math.round(parsed.data.costRub * 100),
     imageUrl,
     stock: parsed.data.stock,
     isActive,
   });
   revalidatePath("/admin/products");
+  revalidatePath("/admin/reports/profit");
   revalidatePath("/catalog");
   revalidatePath("/");
 }
@@ -145,6 +153,7 @@ export async function updateProduct(
     slug: formData.get("slug")?.toString(),
     description: formData.get("description")?.toString(),
     priceRub: formData.get("priceRub"),
+    costRub: formData.get("costRub"),
     stock: formData.get("stock"),
   });
   if (!parsed.success) return { error: "Проверьте правильность заполнения полей" };
@@ -161,6 +170,7 @@ export async function updateProduct(
       slug,
       description: parsed.data.description?.trim() || null,
       price: Math.round(parsed.data.priceRub * 100),
+      cost: Math.round(parsed.data.costRub * 100),
       ...(imageUrl ? { imageUrl } : {}),
       stock: parsed.data.stock,
       isActive,
@@ -169,6 +179,7 @@ export async function updateProduct(
     .where(eq(products.id, id));
 
   revalidatePath("/admin/products");
+  revalidatePath("/admin/reports/profit");
   revalidatePath("/catalog");
   revalidatePath("/");
   revalidatePath(`/product/${slug}`);

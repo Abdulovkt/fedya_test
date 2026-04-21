@@ -29,6 +29,65 @@ body {
   font-family: var(--font-montserrat), var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Печать отчётов админки: скрываем лишнее, разрывы страниц */
+@media print {
+  @page {
+    margin: 14mm;
+    size: a4;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .admin-report-sheet {
+    box-shadow: none !important;
+    border-color: #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .admin-report-sheet table {
+    border-color: #000 !important;
+  }
+
+  .admin-report-sheet th,
+  .admin-report-sheet td {
+    border-color: #000 !important;
+    color: #000 !important;
+  }
+
+  .admin-report-sheet .report-th {
+    background: #fff !important;
+  }
+
+  .admin-report > article:not(:last-of-type) {
+    break-after: page;
+    page-break-after: always;
+  }
+}
+
+/* Таблицы в стиле печатного отчёта (экран и печать) */
+.report-th {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  padding: 0.5rem 0.65rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+}
+
+.report-td {
+  border: 1px solid #cbd5e1;
+  padding: 0.45rem 0.65rem;
+  vertical-align: top;
+}
+
 .reveal {
   opacity: 0;
   transform: translateX(var(--reveal-x, 18px));

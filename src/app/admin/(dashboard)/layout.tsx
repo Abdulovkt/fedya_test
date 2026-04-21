@@ -14,7 +14,7 @@ export default async function AdminDashboardLayout({
   }
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-4 py-6 sm:flex-row sm:px-6 lg:px-8">
-      <aside className="w-full shrink-0 space-y-2 rounded-xl border border-brand-border bg-brand-surface/50 p-4 sm:w-56">
+      <aside className="print:hidden w-full shrink-0 space-y-2 rounded-xl border border-brand-border bg-brand-surface/50 p-4 sm:w-56">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-muted">
           Админка
         </p>
@@ -42,6 +42,12 @@ export default async function AdminDashboardLayout({
             className="rounded-md px-2 py-1.5 text-brand-heading hover:bg-brand-elevated"
           >
             Заказы
+          </Link>
+          <Link
+            href="/admin/reports"
+            className="rounded-md px-2 py-1.5 text-brand-heading hover:bg-brand-elevated"
+          >
+            Отчёты
           </Link>
           <Link
             href="/admin/promocodes"

@@ -28,6 +28,8 @@ export const products = sqliteTable("products", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   price: integer("price").notNull(),
+  /** Себестоимость единицы товара, коп. (для отчёта о прибыли). */
+  cost: integer("cost").notNull().default(0),
   imageUrl: text("image_url"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   stock: integer("stock").notNull().default(0),
