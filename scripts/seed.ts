@@ -49,6 +49,7 @@ async function main() {
         imageUrl: null,
         isActive: true,
         stock: 50,
+        fulfillmentType: "russian_post",
       },
       {
         categoryId: protein.id,
@@ -60,6 +61,7 @@ async function main() {
         imageUrl: null,
         isActive: true,
         stock: 30,
+        fulfillmentType: "cdek",
       },
       {
         categoryId: creatine.id,
@@ -71,6 +73,7 @@ async function main() {
         imageUrl: null,
         isActive: true,
         stock: 100,
+        fulfillmentType: "russian_post",
       },
     ]);
     console.log("Demo categories and products inserted.");

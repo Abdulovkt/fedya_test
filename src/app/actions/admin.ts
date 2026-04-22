@@ -16,6 +16,7 @@ import {
   promoCodes,
 } from "@/db/schema";
 import { slugify } from "@/lib/format";
+import { FULFILLMENT_TYPES, normalizeFulfillmentType } from "@/lib/shipping";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
 import { STATUS_VALUES, getStatusMeta } from "@/lib/order-statuses";
 import {
@@ -86,6 +87,7 @@ const productSchema = z.object({
     z.coerce.number().min(0),
   ),
   stock: z.coerce.number().int().min(0),
+  fulfillmentType: z.enum(FULFILLMENT_TYPES),
 });
 
 async function saveUploadedImage(file: File | null): Promise<string | null> {
@@ -112,6 +114,7 @@ export async function createProduct(formData: FormData) {
     priceRub: formData.get("priceRub"),
     costRub: formData.get("costRub"),
     stock: formData.get("stock"),
+    fulfillmentType: normalizeFulfillmentType(String(formData.get("fulfillmentType") ?? "")),
   });
   if (!parsed.success) return;
 
@@ -130,6 +133,7 @@ export async function createProduct(formData: FormData) {
     imageUrl,
     stock: parsed.data.stock,
     isActive,
+    fulfillmentType: parsed.data.fulfillmentType,
   });
   revalidatePath("/admin/products");
   revalidatePath("/admin/reports/profit");
@@ -155,6 +159,7 @@ export async function updateProduct(
     priceRub: formData.get("priceRub"),
     costRub: formData.get("costRub"),
     stock: formData.get("stock"),
+    fulfillmentType: normalizeFulfillmentType(String(formData.get("fulfillmentType") ?? "")),
   });
   if (!parsed.success) return { error: "Проверьте правильность заполнения полей" };
 
@@ -174,6 +179,7 @@ export async function updateProduct(
       ...(imageUrl ? { imageUrl } : {}),
       stock: parsed.data.stock,
       isActive,
+      fulfillmentType: parsed.data.fulfillmentType,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id));
@@ -332,6 +338,14 @@ export async function deletePromoCode(formData: FormData) {
 
 export type SaveSettingsState = { ok?: boolean; error?: string } | null;
 
+function parseNonNegativeRub(raw: string): { ok: true; value: string } | { ok: false; error: string } {
+  const n = Number(String(raw ?? "").replace(",", ".").trim());
+  if (!Number.isFinite(n) || n < 0) {
+    return { ok: false, error: "Укажите неотрицательное число рублей для доставки" };
+  }
+  return { ok: true, value: String(n) };
+}
+
 export async function saveEmailSettings(
   _prev: SaveSettingsState,
   formData: FormData,
@@ -341,6 +355,12 @@ export async function saveEmailSettings(
     const data = Object.fromEntries(
       SETTING_KEYS.map((k) => [k, (formData.get(k) as string | null) ?? ""]),
     ) as Record<SettingKey, string>;
+    const post = parseNonNegativeRub(data.delivery_russian_post_rub);
+    if (!post.ok) return { error: post.error };
+    const cdek = parseNonNegativeRub(data.delivery_cdek_rub);
+    if (!cdek.ok) return { error: cdek.error };
+    data.delivery_russian_post_rub = post.value;
+    data.delivery_cdek_rub = cdek.value;
     await saveSettings(data);
     const verifyResult = await verifyEmailTransport();
     revalidatePath("/admin/settings");

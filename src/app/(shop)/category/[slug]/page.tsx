@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { normalizeFulfillmentType } from "@/lib/shipping";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -47,6 +48,7 @@ export default async function CategoryPage({ params }: Props) {
             imageUrl={p.imageUrl}
             stock={p.stock}
             categoryName={cat.name}
+            fulfillmentType={normalizeFulfillmentType(p.fulfillmentType)}
           />
         ))}
       </div>

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { addToCart } from "@/app/actions/cart";
 import { formatPrice, getStockLabel } from "@/lib/format";
+import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Props = {
   id: number;
@@ -11,6 +12,7 @@ type Props = {
   imageUrl: string | null;
   stock: number;
   categoryName?: string;
+  fulfillmentType?: FulfillmentType;
 };
 
 export function ProductCard({
@@ -21,6 +23,7 @@ export function ProductCard({
   imageUrl,
   stock,
   categoryName,
+  fulfillmentType,
 }: Props) {
   const stockLabel = getStockLabel(stock);
   const href = `/product/${slug}`;
@@ -56,11 +59,18 @@ export function ProductCard({
             {name}
           </h3>
           <p className="text-lg font-bold tabular-nums text-brand">{formatPrice(price)}</p>
-          <span
-            className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
-          >
-            {stockLabel.text}
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
+            >
+              {stockLabel.text}
+            </span>
+            {fulfillmentType ? (
+              <span className="w-fit rounded-full border border-brand-border bg-brand-elevated/80 px-2 py-0.5 text-[11px] text-brand-muted">
+                {fulfillmentLabel(fulfillmentType)}
+              </span>
+            ) : null}
+          </div>
         </div>
       </Link>
       <form action={addToCart} className="border-t border-slate-200/80 px-4 pb-4 pt-3">

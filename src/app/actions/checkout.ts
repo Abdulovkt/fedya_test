@@ -9,13 +9,16 @@ import { cartItems, carts, orderItems, orders, promoCodeUsages } from "@/db/sche
 import { getCartId, getCartLines, getCartPromoCode } from "@/lib/cart";
 import { releaseExpiredReservations } from "@/lib/reservation";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-import { getCartPricing } from "@/lib/pricing";
+import { getCheckoutAmounts, type PriceLine } from "@/lib/pricing";
 import { getPromoValidationError, hasPromoBeenUsedByCustomer } from "@/lib/promocodes";
+import { getSettings, getDeliveryFeesKopecksFromSettings } from "@/lib/settings";
 import { createPayPassRequest } from "@/lib/paypass";
 import {
   buildPublicPayPassClientRequestId,
   generateUniquePublicOrderNumber,
 } from "@/lib/order-number";
+
+const CDEK_PVZ_MAX_LEN = 2000;
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Укажите имя"),
@@ -24,6 +27,9 @@ const checkoutSchema = z.object({
   telegram: z.string().optional(),
   address: z.string().optional(),
   comment: z.string().optional(),
+  cdekPickupPoint: z
+    .string()
+    .max(CDEK_PVZ_MAX_LEN, "Слишком длинный текст пункта выдачи"),
 });
 
 export type CheckoutState = {
@@ -51,6 +57,7 @@ export async function placeOrder(
     telegram: formData.get("telegram") || undefined,
     address: formData.get("address") || undefined,
     comment: formData.get("comment") || undefined,
+    cdekPickupPoint: formData.get("cdekPickupPoint")?.toString() ?? "",
   });
 
   if (!parsed.success) {
@@ -96,7 +103,28 @@ export async function placeOrder(
     }
   }
 
-  const pricing = getCartPricing(lines, appliedPromo);
+  const settings = await getSettings();
+  const fees = getDeliveryFeesKopecksFromSettings(settings);
+  const priceLines: PriceLine[] = lines.map((l) => ({
+    productId: l.productId,
+    price: l.price,
+    quantity: l.quantity,
+  }));
+  const amounts = getCheckoutAmounts(priceLines, lines, appliedPromo, {
+    postKopecks: fees.postKopecks,
+    cdekKopecks: fees.cdekKopecks,
+  });
+  const pricing = amounts.pricing;
+
+  const cdekTrimmed = (parsed.data.cdekPickupPoint ?? "").trim();
+  if (amounts.delivery.hasCdek) {
+    if (!cdekTrimmed) {
+      return {
+        fieldErrors: { cdekPickupPoint: ["Укажите пункт выдачи СДЭК (адрес, код ПВЗ)"] },
+      };
+    }
+  }
+
   const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   const chatToken = crypto.randomUUID();
@@ -123,7 +151,10 @@ export async function placeOrder(
           promoDiscountAmount: pricing.promoDiscountAmount,
           promoDiscountPercent: pricing.promoDiscountPercent,
           appliedDiscountMode: pricing.appliedDiscountMode,
-          totalAmount: pricing.finalTotal,
+          deliveryPostKopecks: amounts.delivery.postKopecks,
+          deliveryCdekKopecks: amounts.delivery.cdekKopecks,
+          cdekPickupPoint: amounts.delivery.hasCdek ? cdekTrimmed : null,
+          totalAmount: amounts.payableTotalKopecks,
           chatToken,
         })
         .returning({ id: orders.id, publicOrderNumber: orders.publicOrderNumber });
@@ -143,7 +174,7 @@ export async function placeOrder(
   const paypassClientRequestId = buildPublicPayPassClientRequestId(publicOrderNumber);
   try {
     const paypass = await createPayPassRequest({
-      amountRub: pricing.finalTotal / 100,
+      amountRub: amounts.payableTotalKopecks / 100,
       clientRequestId: paypassClientRequestId,
       comment: `Заказ ${publicOrderNumber}`,
       clientFio: parsed.data.customerName,

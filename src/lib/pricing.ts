@@ -1,4 +1,5 @@
 import type { PromoCodeRecord } from "@/lib/promocodes";
+import { getDeliveryBreakdown, type LineWithFulfillment } from "@/lib/shipping";
 
 export type DiscountRule = {
   minAmount: number;
@@ -147,3 +148,28 @@ export function getCartPricing(
 ): PricingSummary {
   return getPricingFromLines(lines, promo);
 }
+
+export type CheckoutAmounts = {
+  pricing: PricingSummary;
+  delivery: ReturnType<typeof getDeliveryBreakdown>;
+  goodsTotalKopecks: number;
+  payableTotalKopecks: number;
+};
+
+/** Сумма товаров со скидкой + фиксированная доставка по типам отгрузки в корзине. */
+export function getCheckoutAmounts(
+  lines: PriceLine[],
+  fulfillmentLines: LineWithFulfillment[],
+  promo: PromoCodeRecord | null,
+  fees: { postKopecks: number; cdekKopecks: number },
+): CheckoutAmounts {
+  const pricing = getCartPricing(lines, promo);
+  const delivery = getDeliveryBreakdown(fulfillmentLines, fees);
+  return {
+    pricing,
+    delivery,
+    goodsTotalKopecks: pricing.finalTotal,
+    payableTotalKopecks: pricing.finalTotal + delivery.totalDeliveryKopecks,
+  };
+}
+

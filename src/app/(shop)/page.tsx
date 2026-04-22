@@ -6,6 +6,7 @@ import { StoryBlocks } from "@/components/shop/StoryBlocks";
 import { WhyUsPanel } from "@/components/shop/WhyUsPanel";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { normalizeFulfillmentType } from "@/lib/shipping";
 
 const REFERENCE_HERO_IMAGE = "/hero.jpg";
 
@@ -19,6 +20,7 @@ export default async function HomePage() {
       imageUrl: products.imageUrl,
       stock: products.stock,
       categoryName: categories.name,
+      fulfillmentType: products.fulfillmentType,
     })
     .from(products)
     .innerJoin(categories, eq(products.categoryId, categories.id))
@@ -90,6 +92,7 @@ export default async function HomePage() {
               imageUrl={p.imageUrl}
               stock={p.stock}
               categoryName={p.categoryName}
+              fulfillmentType={normalizeFulfillmentType(p.fulfillmentType)}
             />
           ))}
         </div>

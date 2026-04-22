@@ -2,6 +2,7 @@ import { asc, eq, and } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { normalizeFulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Каталог" };
 
@@ -27,6 +28,7 @@ export default async function CatalogPage({
       imageUrl: products.imageUrl,
       stock: products.stock,
       categoryName: categories.name,
+      fulfillmentType: products.fulfillmentType,
     })
     .from(products)
     .innerJoin(categories, eq(products.categoryId, categories.id))
@@ -65,6 +67,7 @@ export default async function CatalogPage({
               imageUrl={p.imageUrl}
               stock={p.stock}
               categoryName={p.categoryName}
+              fulfillmentType={normalizeFulfillmentType(p.fulfillmentType)}
             />
           ))}
         </div>

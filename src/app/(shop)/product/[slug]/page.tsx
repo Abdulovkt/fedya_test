@@ -6,6 +6,7 @@ import { addToCart } from "@/app/actions/cart";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatPrice, getStockLabel } from "@/lib/format";
+import { fulfillmentLabel, normalizeFulfillmentType } from "@/lib/shipping";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -81,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
           <p className="mt-4 text-2xl font-bold text-brand sm:text-3xl">
             {formatPrice(p.price)}
           </p>
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <span
               className={`rounded-full px-3 py-1 text-sm font-medium ${stockLabel.className}`}
             >
@@ -90,6 +91,9 @@ export default async function ProductPage({ params }: Props) {
             {p.stock > 0 && (
               <span className="text-sm text-brand-muted">{p.stock} шт.</span>
             )}
+            <span className="rounded-full border border-brand-border bg-brand-elevated px-3 py-1 text-xs text-brand-muted">
+              Доставка: {fulfillmentLabel(normalizeFulfillmentType(p.fulfillmentType))}
+            </span>
           </div>
           {p.description ? (
             <div className="prose prose-neutral mt-6 max-w-none text-brand-muted prose-p:leading-relaxed">

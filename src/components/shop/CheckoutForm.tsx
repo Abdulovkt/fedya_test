@@ -10,8 +10,11 @@ const initialState: CheckoutState = {};
 
 export function CheckoutForm({
   promoCode,
+  needsCdekPickup = false,
 }: {
   promoCode?: string | null;
+  /** Показать обязательное поле «ПВЗ СДЭК» */
+  needsCdekPickup?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     placeOrder,
@@ -110,6 +113,27 @@ export function CheckoutForm({
           className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
         />
       </div>
+      {needsCdekPickup ? (
+        <div>
+          <label htmlFor="cdekPickupPoint" className="block text-sm text-brand-muted">
+            Пункт выдачи СДЭК
+          </label>
+          <p className="mt-0.5 text-xs text-brand-muted">
+            Адрес ПВЗ, код офиса или краткий комментарий — как вам удобнее.
+          </p>
+          <textarea
+            id="cdekPickupPoint"
+            name="cdekPickupPoint"
+            required
+            rows={3}
+            className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+            placeholder="Например: ул. …, СДЭК, код 1234"
+          />
+          {state.fieldErrors?.cdekPickupPoint?.[0] ? (
+            <p className="mt-1 text-xs text-red-400">{state.fieldErrors.cdekPickupPoint[0]}</p>
+          ) : null}
+        </div>
+      ) : null}
       <button
         type="submit"
         disabled={pending}

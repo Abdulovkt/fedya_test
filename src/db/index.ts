@@ -1,9 +1,12 @@
-import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 
+type SqliteCtor = typeof import("better-sqlite3");
+/** Instance type without a static runtime import of better-sqlite3 (keeps native addon off the module graph until first use). */
+type SqliteDatabase = InstanceType<SqliteCtor>;
+
 const globalForDb = globalThis as unknown as {
-  sqlite: Database.Database | undefined;
+  sqlite: SqliteDatabase | undefined;
 };
 
 function getDatabasePath() {
@@ -14,12 +17,12 @@ function getDatabasePath() {
   return url;
 }
 
-function hasColumn(db: Database.Database, tableName: string, columnName: string) {
+function hasColumn(db: SqliteDatabase, tableName: string, columnName: string) {
   const rows = db.pragma(`table_info(${tableName})`) as Array<{ name: string }>;
   return rows.some((row) => row.name === columnName);
 }
 
-function ensurePromoSchema(db: Database.Database) {
+function ensurePromoSchema(db: SqliteDatabase) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS promo_codes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,15 +123,43 @@ function ensurePromoSchema(db: Database.Database) {
   if (!hasColumn(db, "products", "cost")) {
     db.exec("ALTER TABLE products ADD COLUMN cost INTEGER NOT NULL DEFAULT 0;");
   }
+  if (!hasColumn(db, "products", "fulfillment_type")) {
+    db.exec(
+      "ALTER TABLE products ADD COLUMN fulfillment_type TEXT NOT NULL DEFAULT 'russian_post';",
+    );
+  }
 }
 
-const sqlite =
-  globalForDb.sqlite ?? new Database(getDatabasePath());
-sqlite.pragma("journal_mode = WAL");
-ensurePromoSchema(sqlite);
+function openSqlite(): SqliteDatabase {
+  const Database = require("better-sqlite3") as SqliteCtor;
+  const sqlite = globalForDb.sqlite ?? new Database(getDatabasePath());
+  sqlite.pragma("journal_mode = WAL");
+  ensurePromoSchema(sqlite);
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.sqlite = sqlite;
+  if (process.env.NODE_ENV !== "production") {
+    globalForDb.sqlite = sqlite;
+  }
+  return sqlite;
 }
 
-export const db = drizzle(sqlite, { schema });
+type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>;
+
+let drizzleSingleton: DrizzleDb | undefined;
+
+function getDrizzle(): DrizzleDb {
+  if (!drizzleSingleton) {
+    drizzleSingleton = drizzle(openSqlite(), { schema });
+  }
+  return drizzleSingleton;
+}
+
+export const db = new Proxy({} as DrizzleDb, {
+  get(_target, prop, receiver) {
+    const inst = getDrizzle();
+    const value = Reflect.get(inst, prop, receiver);
+    if (typeof value === "function") {
+      return value.bind(inst);
+    }
+    return value;
+  },
+});

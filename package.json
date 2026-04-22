@@ -6,7 +6,7 @@
     "dev": "node scripts/run-next.cjs dev",
     "build": "node scripts/run-next.cjs build",
     "start": "node scripts/run-next.cjs start",
-    "postinstall": "npm rebuild better-sqlite3",
+    "postinstall": "node scripts/rebuild-better-sqlite.cjs",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",

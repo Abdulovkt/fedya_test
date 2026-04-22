@@ -46,13 +46,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     .innerJoin(products, eq(orderItems.productId, products.id))
     .where(eq(orderItems.orderId, oid));
 
+  const goodsPayableKopecks =
+    order.totalAmount - order.deliveryPostKopecks - order.deliveryCdekKopecks;
   const pricing = getPricingFromStoredOrder({
     subtotal: order.subtotalAmount,
     autoDiscountAmount: order.autoDiscountAmount,
     promoCode: order.promoCode,
     promoDiscountAmount: order.promoDiscountAmount,
     promoDiscountPercent: order.promoDiscountPercent,
-    totalAmount: order.totalAmount,
+    totalAmount: goodsPayableKopecks,
   });
 
   const paymentMeta = getPaymentStatusMeta(order.paymentStatus);
@@ -160,6 +162,14 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               Комментарий: {order.comment}
             </p>
           ) : null}
+          {order.cdekPickupPoint ? (
+            <div className="mt-3 rounded-lg border border-brand-border bg-brand-surface/30 px-3 py-2">
+              <p className="text-xs font-semibold text-brand-muted">ПВЗ СДЭК</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-brand-heading">
+                {order.cdekPickupPoint}
+              </p>
+            </div>
+          ) : null}
         </div>
         <div className="rounded-xl border border-brand-border p-5">
           <h2 className="text-sm font-semibold text-brand-muted">Итого</h2>
@@ -180,9 +190,25 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 <span>-{formatPrice(pricing.promoDiscountAmount)}</span>
               </p>
             )}
-            <p className="flex justify-between gap-4 text-xl font-bold text-brand">
-              <span>Итого</span>
+            <p className="flex justify-between gap-4 text-brand-muted">
+              <span>Товары с учётом скидок</span>
               <span>{formatPrice(pricing.finalTotal)}</span>
+            </p>
+            {order.deliveryPostKopecks > 0 && (
+              <p className="flex justify-between gap-4 text-brand-muted">
+                <span>Доставка Почта России</span>
+                <span>{formatPrice(order.deliveryPostKopecks)}</span>
+              </p>
+            )}
+            {order.deliveryCdekKopecks > 0 && (
+              <p className="flex justify-between gap-4 text-brand-muted">
+                <span>Доставка СДЭК</span>
+                <span>{formatPrice(order.deliveryCdekKopecks)}</span>
+              </p>
+            )}
+            <p className="flex justify-between gap-4 text-xl font-bold text-brand">
+              <span>К оплате</span>
+              <span>{formatPrice(order.totalAmount)}</span>
             </p>
           </div>
         </div>
@@ -243,10 +269,38 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             )}
             <tr>
               <td colSpan={3} className="px-4 py-2 text-brand-muted">
-                Итого
+                Товары с учётом скидок
+              </td>
+              <td className="px-4 py-2 text-brand-heading">
+                {formatPrice(pricing.finalTotal)}
+              </td>
+            </tr>
+            {order.deliveryPostKopecks > 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                  Доставка Почта России
+                </td>
+                <td className="px-4 py-2 text-brand-heading">
+                  {formatPrice(order.deliveryPostKopecks)}
+                </td>
+              </tr>
+            )}
+            {order.deliveryCdekKopecks > 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                  Доставка СДЭК
+                </td>
+                <td className="px-4 py-2 text-brand-heading">
+                  {formatPrice(order.deliveryCdekKopecks)}
+                </td>
+              </tr>
+            )}
+            <tr>
+              <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                К оплате
               </td>
               <td className="px-4 py-2 font-bold text-brand">
-                {formatPrice(pricing.finalTotal)}
+                {formatPrice(order.totalAmount)}
               </td>
             </tr>
           </tfoot>

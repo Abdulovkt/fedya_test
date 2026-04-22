@@ -33,6 +33,8 @@ export const products = sqliteTable("products", {
   imageUrl: text("image_url"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   stock: integer("stock").notNull().default(0),
+  /** Склад отгрузки: почта России или СДЭК (копейки доставки — в настройках сайта). */
+  fulfillmentType: text("fulfillment_type").notNull().default("russian_post"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -151,6 +153,12 @@ export const orders = sqliteTable("orders", {
   appliedDiscountMode: text("applied_discount_mode", {
     enum: ["none", "auto", "promo"],
   }).notNull().default("none"),
+  /** Доставка почтой России, коп. (фикс за заказ, если в корзине были такие товары). */
+  deliveryPostKopecks: integer("delivery_post_kopecks").notNull().default(0),
+  /** Доставка СДЭК, коп. */
+  deliveryCdekKopecks: integer("delivery_cdek_kopecks").notNull().default(0),
+  /** Пункт выдачи СДЭК (адрес, код ПВЗ) — если в заказе была отгрузка СДЭК. */
+  cdekPickupPoint: text("cdek_pickup_point"),
   totalAmount: integer("total_amount").notNull(),
   chatToken: text("chat_token"),
   adminLastReadAt: integer("admin_last_read_at"),

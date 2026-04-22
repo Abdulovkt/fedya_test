@@ -2,20 +2,41 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import { getCartLines, getCartPromoCode } from "@/lib/cart";
-import { getCartPricing } from "@/lib/pricing";
+import { getCheckoutAmounts } from "@/lib/pricing";
 import { CartItemControls } from "@/components/shop/CartItemControls";
 import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { PromoCodeForm } from "@/components/shop/PromoCodeForm";
 import { getPromoValidationError } from "@/lib/promocodes";
+import { getSettings, getDeliveryFeesKopecksFromSettings } from "@/lib/settings";
+import {
+  fulfillmentLabel,
+  fulfillmentShortHint,
+  type FulfillmentType,
+} from "@/lib/shipping";
 
 export const metadata = { title: "Корзина" };
+
+const FULFILLMENT_ORDER: FulfillmentType[] = ["russian_post", "cdek"];
 
 export default async function CartPage() {
   const lines = await getCartLines();
   const rawPromo = await getCartPromoCode();
   const promoError = rawPromo ? getPromoValidationError(lines, rawPromo) : null;
   const appliedPromo = promoError ? null : rawPromo;
-  const pricing = getCartPricing(lines, appliedPromo);
+
+  const settings = await getSettings();
+  const fees = getDeliveryFeesKopecksFromSettings(settings);
+  const priceLines = lines.map((l) => ({
+    productId: l.productId,
+    price: l.price,
+    quantity: l.quantity,
+  }));
+  const amounts = getCheckoutAmounts(priceLines, lines, appliedPromo, {
+    postKopecks: fees.postKopecks,
+    cdekKopecks: fees.cdekKopecks,
+  });
+  const pricing = amounts.pricing;
+  const { delivery } = amounts;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -40,53 +61,78 @@ export default async function CartPage() {
               promoError={promoError}
             />
           </div>
-          <ul className="mt-8 divide-y divide-brand-border">
-            {lines.map((line) => (
-              <li key={line.itemId} className="flex gap-4 py-6 first:pt-0">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
-                  {line.imageUrl ? (
-                    <Image
-                      src={line.imageUrl}
-                      alt={line.name}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-brand-muted">
-                      нет
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/product/${line.slug}`}
-                    className="break-words font-medium text-brand-heading hover:text-brand-secondary"
-                  >
-                    {line.name}
-                  </Link>
-                  <p className="mt-1 text-sm text-brand">
-                    {formatPrice(line.price)} × {line.quantity}{" "}
-                    <span className="text-brand-muted">
-                      = {formatPrice(line.price * line.quantity)}
-                    </span>
-                  </p>
-                  {line.reservedUntil && (
-                    <p className="mt-0.5 text-xs text-brand-muted">
-                      Зарезервировано до{" "}
-                      {line.reservedUntil.toLocaleString("ru-RU", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+
+          <section className="mt-8">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-muted">
+              Отправления
+            </h2>
+            <p className="mt-1 text-xs text-brand-muted">
+              Товары отгружаются отдельно по перевозчику: к заказу добавляется одна доставка за
+              каждую линию (Почта и/или СДЭК), если в корзине есть соответствующие товары.
+            </p>
+            <div className="mt-4 space-y-8">
+              {FULFILLMENT_ORDER.map((ft) => {
+                const group = lines.filter((l) => l.fulfillmentType === ft);
+                if (!group.length) return null;
+                return (
+                  <div key={ft}>
+                    <p className="text-sm font-medium text-brand-heading">
+                      {fulfillmentLabel(ft)}
                     </p>
-                  )}
-                  <CartItemControls itemId={line.itemId} quantity={line.quantity} />
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <p className="mt-0.5 text-xs text-brand-muted">{fulfillmentShortHint(ft)}</p>
+                    <ul className="mt-3 divide-y divide-brand-border">
+                      {group.map((line) => (
+                        <li key={line.itemId} className="flex gap-4 py-6 first:pt-0">
+                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+                            {line.imageUrl ? (
+                              <Image
+                                src={line.imageUrl}
+                                alt={line.name}
+                                fill
+                                className="object-cover"
+                                sizes="80px"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-brand-muted">
+                                нет
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={`/product/${line.slug}`}
+                              className="break-words font-medium text-brand-heading hover:text-brand-secondary"
+                            >
+                              {line.name}
+                            </Link>
+                            <p className="mt-1 text-sm text-brand">
+                              {formatPrice(line.price)} × {line.quantity}{" "}
+                              <span className="text-brand-muted">
+                                = {formatPrice(line.price * line.quantity)}
+                              </span>
+                            </p>
+                            {line.reservedUntil && (
+                              <p className="mt-0.5 text-xs text-brand-muted">
+                                Зарезервировано до{" "}
+                                {line.reservedUntil.toLocaleString("ru-RU", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            )}
+                            <CartItemControls itemId={line.itemId} quantity={line.quantity} />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
           <div className="mt-8 flex flex-col gap-4 border-t border-brand-border pt-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1.5">
               <p className="text-sm text-brand-muted">
@@ -112,9 +158,24 @@ export default async function CartPage() {
                   </p>
                 </>
               )}
+              <p className="text-sm text-brand-muted">
+                Товары со скидкой: {formatPrice(pricing.finalTotal)}
+              </p>
+              {delivery.postKopecks > 0 && (
+                <p className="text-sm text-brand-muted">
+                  Доставка Почта России: {formatPrice(delivery.postKopecks)}
+                </p>
+              )}
+              {delivery.cdekKopecks > 0 && (
+                <p className="text-sm text-brand-muted">
+                  Доставка СДЭК: {formatPrice(delivery.cdekKopecks)}
+                </p>
+              )}
               <p className="text-lg text-brand-heading">
-                Итого:{" "}
-                <span className="font-bold text-brand">{formatPrice(pricing.finalTotal)}</span>
+                К оплате:{" "}
+                <span className="font-bold text-brand">
+                  {formatPrice(amounts.payableTotalKopecks)}
+                </span>
               </p>
             </div>
             <Link

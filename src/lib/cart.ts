@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { cartItems, carts, products } from "@/db/schema";
 import { getPromoCodeById, type PromoCodeRecord } from "@/lib/promocodes";
 import { releaseExpiredReservations } from "@/lib/reservation";
+import { normalizeFulfillmentType, type FulfillmentType } from "@/lib/shipping";
 
 const CART_COOKIE = "cart_id";
 const CART_MAX_AGE = 60 * 60 * 24 * 30;
@@ -73,6 +74,7 @@ export type CartLine = {
   quantity: number;
   imageUrl: string | null;
   reservedUntil: Date | null;
+  fulfillmentType: FulfillmentType;
 };
 
 export async function getCartLines(): Promise<CartLine[]> {
@@ -92,6 +94,7 @@ export async function getCartLines(): Promise<CartLine[]> {
       quantity: cartItems.quantity,
       imageUrl: products.imageUrl,
       reservedUntil: cartItems.reservedUntil,
+      fulfillmentType: products.fulfillmentType,
     })
     .from(cartItems)
     .innerJoin(products, eq(cartItems.productId, products.id))
@@ -106,6 +109,7 @@ export async function getCartLines(): Promise<CartLine[]> {
     quantity: r.quantity,
     imageUrl: r.imageUrl,
     reservedUntil: r.reservedUntil,
+    fulfillmentType: normalizeFulfillmentType(r.fulfillmentType),
   }));
 }
 

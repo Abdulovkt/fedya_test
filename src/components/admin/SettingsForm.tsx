@@ -48,6 +48,30 @@ export function SettingsForm({ current }: { current: EmailSettings }) {
         />
       </section>
 
+      {/* Доставка — фикс. суммы за отгрузку (корзина с товарами с соответствующим складом) */}
+      <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-brand-heading">Доставка</h2>
+        <p className="text-xs text-brand-muted/80">
+          Начисляется один раз за заказ на каждую линию отгрузки: если в корзине есть товар с
+          доставкой Почтой России и/или СДЭК — к сумме товаров (после скидок) добавляется
+          соответствующая сумма.
+        </p>
+        <Field
+          name="delivery_russian_post_rub"
+          label="Почта России, ₽ за отправление"
+          hint="0 — без отдельной платы в заказе"
+          defaultValue={current.delivery_russian_post_rub}
+          placeholder="0"
+        />
+        <Field
+          name="delivery_cdek_rub"
+          label="СДЭК, ₽ за отправление"
+          hint="0 — без отдельной платы в заказе"
+          defaultValue={current.delivery_cdek_rub}
+          placeholder="0"
+        />
+      </section>
+
       {/* PayPass */}
       <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-brand-heading">PayPass</h2>

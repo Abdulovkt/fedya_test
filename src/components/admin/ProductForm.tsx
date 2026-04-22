@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, type UpdateProductState } from "@/app/actions/admin";
+import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Category = { id: number; name: string };
 
@@ -21,6 +22,7 @@ type Props = {
     stock: number;
     isActive: boolean;
     imageUrl: string | null;
+    fulfillmentType: FulfillmentType;
   };
 };
 
@@ -98,6 +100,25 @@ export function ProductForm({ categories, mode, product }: Props) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label htmlFor="fulfillmentType" className="text-sm text-brand-muted">
+          Склад / способ отгрузки
+        </label>
+        <select
+          id="fulfillmentType"
+          name="fulfillmentType"
+          required
+          defaultValue={product?.fulfillmentType ?? "russian_post"}
+          className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+        >
+          <option value="russian_post">{fulfillmentLabel("russian_post")} (отдельное отправление)</option>
+          <option value="cdek">{fulfillmentLabel("cdek")} (отдельное отправление)</option>
+        </select>
+        <p className="mt-1 text-xs text-brand-muted">
+          Определяет, с какого «склада» идёт отгрузка и какая строка доставки добавится к заказу.
+        </p>
       </div>
 
       <div>
