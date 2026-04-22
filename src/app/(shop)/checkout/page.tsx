@@ -136,10 +136,10 @@ export default async function CheckoutPage() {
                 <span>{formatPrice(delivery.postKopecks)}</span>
               </p>
             )}
-            {delivery.cdekKopecks > 0 && (
+            {delivery.hasCdek && (
               <p className="flex justify-between gap-4 text-sm text-brand-muted">
                 <span>Доставка СДЭК</span>
-                <span>{formatPrice(delivery.cdekKopecks)}</span>
+                <span className="text-right">оплачивается отдельно</span>
               </p>
             )}
             <p className="flex justify-between gap-4 text-lg text-brand-heading">

@@ -18,7 +18,7 @@ export function fulfillmentLabel(t: FulfillmentType): string {
 export function fulfillmentShortHint(t: FulfillmentType): string {
   switch (t) {
     case "cdek":
-      return "Отправка СДЭК — получение в пункте выдачи.";
+      return "Отправка СДЭК — получение в ПВЗ; доставку оплачивает покупатель отдельно (не в счёте магазина).";
     default:
       return "Отправка Почтой России.";
   }

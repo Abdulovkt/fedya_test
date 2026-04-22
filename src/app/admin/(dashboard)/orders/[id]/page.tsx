@@ -202,8 +202,14 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             )}
             {order.deliveryCdekKopecks > 0 && (
               <p className="flex justify-between gap-4 text-brand-muted">
-                <span>Доставка СДЭК</span>
+                <span>Доставка СДЭК (в заказе)</span>
                 <span>{formatPrice(order.deliveryCdekKopecks)}</span>
+              </p>
+            )}
+            {order.deliveryCdekKopecks === 0 && order.cdekPickupPoint && (
+              <p className="flex justify-between gap-4 text-brand-muted">
+                <span>Доставка СДЭК</span>
+                <span className="text-right text-xs">оплачивается получателем</span>
               </p>
             )}
             <p className="flex justify-between gap-4 text-xl font-bold text-brand">
@@ -288,10 +294,20 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             {order.deliveryCdekKopecks > 0 && (
               <tr>
                 <td colSpan={3} className="px-4 py-2 text-brand-muted">
-                  Доставка СДЭК
+                  Доставка СДЭК (в заказе)
                 </td>
                 <td className="px-4 py-2 text-brand-heading">
                   {formatPrice(order.deliveryCdekKopecks)}
+                </td>
+              </tr>
+            )}
+            {order.deliveryCdekKopecks === 0 && order.cdekPickupPoint && (
+              <tr>
+                <td colSpan={3} className="px-4 py-2 text-brand-muted">
+                  Доставка СДЭК
+                </td>
+                <td className="px-4 py-2 text-xs text-brand-heading">
+                  оплачивается получателем
                 </td>
               </tr>
             )}

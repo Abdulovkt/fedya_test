@@ -357,10 +357,7 @@ export async function saveEmailSettings(
     ) as Record<SettingKey, string>;
     const post = parseNonNegativeRub(data.delivery_russian_post_rub);
     if (!post.ok) return { error: post.error };
-    const cdek = parseNonNegativeRub(data.delivery_cdek_rub);
-    if (!cdek.ok) return { error: cdek.error };
     data.delivery_russian_post_rub = post.value;
-    data.delivery_cdek_rub = cdek.value;
     await saveSettings(data);
     const verifyResult = await verifyEmailTransport();
     revalidatePath("/admin/settings");

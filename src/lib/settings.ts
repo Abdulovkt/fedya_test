@@ -16,8 +16,6 @@ export const SETTING_KEYS = [
   "paypass_sync_secret",
   /** Фикс. доставка почтой России за заказ, ₽ (строка для формы). */
   "delivery_russian_post_rub",
-  /** Фикс. доставка СДЭК за заказ, ₽. */
-  "delivery_cdek_rub",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -46,7 +44,6 @@ export async function getSettings(): Promise<EmailSettings> {
     paypass_api_key: map.paypass_api_key ?? process.env.PAYPASS_API_KEY ?? "",
     paypass_sync_secret: map.paypass_sync_secret ?? process.env.PAYPASS_SYNC_SECRET ?? "",
     delivery_russian_post_rub: map.delivery_russian_post_rub ?? "0",
-    delivery_cdek_rub: map.delivery_cdek_rub ?? "0",
   };
 }
 
@@ -56,12 +53,11 @@ export function getDeliveryFeesKopecksFromSettings(s: EmailSettings): {
   cdekKopecks: number;
 } {
   const postRub = Number(String(s.delivery_russian_post_rub ?? "0").replace(",", "."));
-  const cdekRub = Number(String(s.delivery_cdek_rub ?? "0").replace(",", "."));
   const safePost = Number.isFinite(postRub) && postRub >= 0 ? postRub : 0;
-  const safeCdek = Number.isFinite(cdekRub) && cdekRub >= 0 ? cdekRub : 0;
   return {
     postKopecks: Math.round(safePost * 100),
-    cdekKopecks: Math.round(safeCdek * 100),
+    /** СДЭК не фиксируем в магазине: оплата доставки — у покупателя / по тарифам СДЭК. */
+    cdekKopecks: 0,
   };
 }
 

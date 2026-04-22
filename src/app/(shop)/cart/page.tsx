@@ -67,8 +67,9 @@ export default async function CartPage() {
               Отправления
             </h2>
             <p className="mt-1 text-xs text-brand-muted">
-              Товары отгружаются отдельно по перевозчику: к заказу добавляется одна доставка за
-              каждую линию (Почта и/или СДЭК), если в корзине есть соответствующие товары.
+              Товары отгружаются отдельно: для Почты России к сумме заказа может добавляться
+              настроенная в магазине доставка. СДЭК в счёт магазина не входит — при оформлении
+              укажите ПВЗ.
             </p>
             <div className="mt-4 space-y-8">
               {FULFILLMENT_ORDER.map((ft) => {
@@ -166,9 +167,9 @@ export default async function CartPage() {
                   Доставка Почта России: {formatPrice(delivery.postKopecks)}
                 </p>
               )}
-              {delivery.cdekKopecks > 0 && (
+              {delivery.hasCdek && (
                 <p className="text-sm text-brand-muted">
-                  Доставка СДЭК: {formatPrice(delivery.cdekKopecks)}
+                  Доставка СДЭК: оплачивается отдельно (при оформлении укажите пункт выдачи).
                 </p>
               )}
               <p className="text-lg text-brand-heading">
