@@ -23,55 +23,56 @@ export function ProductCard({
   categoryName,
 }: Props) {
   const stockLabel = getStockLabel(stock);
+  const href = `/product/${slug}`;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-md shadow-black/5">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-brand-surface shadow-sm shadow-slate-900/5 transition-all duration-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-900/10">
       <Link
-        href={`/product/${slug}`}
-        className="relative aspect-square bg-brand-elevated"
+        href={href}
+        className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
       >
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 280px"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-brand-muted">
-            Нет фото
-          </div>
-        )}
-      </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        {categoryName ? (
-          <p className="text-xs uppercase tracking-wide text-brand-muted">
-            {categoryName}
-          </p>
-        ) : null}
-        <Link href={`/product/${slug}`}>
-          <h3 className="line-clamp-2 text-base font-semibold text-brand-heading hover:text-brand-secondary">
+        <div className="relative aspect-square overflow-hidden bg-brand-elevated">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              fill
+              className="object-cover transition-transform duration-300 will-change-transform motion-reduce:transition-none motion-reduce:group-hover:scale-100 group-hover:scale-[1.03]"
+              sizes="(max-width: 768px) 100vw, 280px"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-brand-muted">
+              Нет фото
+            </div>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-2 p-4">
+          {categoryName ? (
+            <p className="text-xs uppercase tracking-wide text-brand-muted">
+              {categoryName}
+            </p>
+          ) : null}
+          <h3 className="line-clamp-2 text-base font-semibold tracking-tight text-brand-heading group-hover:text-brand-secondary">
             {name}
           </h3>
-        </Link>
-        <p className="text-lg font-bold text-brand">{formatPrice(price)}</p>
-        <span
-          className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
-        >
-          {stockLabel.text}
-        </span>
-        <form action={addToCart} className="mt-auto">
-          <input type="hidden" name="productId" value={id} />
-          <button
-            type="submit"
-            disabled={stock <= 0}
-            className="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+          <p className="text-lg font-bold tabular-nums text-brand">{formatPrice(price)}</p>
+          <span
+            className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
           >
-            В корзину
-          </button>
-        </form>
-      </div>
+            {stockLabel.text}
+          </span>
+        </div>
+      </Link>
+      <form action={addToCart} className="border-t border-slate-200/80 px-4 pb-4 pt-3">
+        <input type="hidden" name="productId" value={id} />
+        <button
+          type="submit"
+          disabled={stock <= 0}
+          className="w-full cursor-pointer rounded-lg bg-brand-teal py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          В корзину
+        </button>
+      </form>
     </article>
   );
 }

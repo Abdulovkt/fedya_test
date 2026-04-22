@@ -38,7 +38,7 @@ export default async function HomePage() {
             className="object-cover object-center"
             sizes="(max-width: 1280px) 100vw, 1280px"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/35" />
           <div className="relative flex flex-col items-start justify-center px-6 py-16 sm:px-12 sm:py-32 lg:px-16 lg:py-40">
             <h1 className="max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
               Интернет-магазин

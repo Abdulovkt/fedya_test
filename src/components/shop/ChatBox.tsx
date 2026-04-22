@@ -169,7 +169,7 @@ export function ChatBox({
         <button
           type="submit"
           disabled={sending || (!text.trim() && !attachment)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-hover disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-40"
           aria-label="Отправить"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

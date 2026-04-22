@@ -5,6 +5,8 @@ type DiscountInfoProps = {
   compact?: boolean;
   subtotal?: number;
   className?: string;
+  /** Полоса под тёмной шапкой: светлый текст, бирюзовый акцент */
+  variant?: "default" | "headerBar";
 };
 
 function getRangeLabel(index: number) {
@@ -27,9 +29,38 @@ export function DiscountInfo({
   compact = false,
   subtotal = 0,
   className = "",
+  variant = "default",
 }: DiscountInfoProps) {
   const rules = DISCOUNT_RULES.slice().reverse();
   const currentRate = getDiscountRate(subtotal);
+
+  if (compact && variant === "headerBar") {
+    return (
+      <div className={`text-xs sm:text-sm ${className}`}>
+        <p className="font-semibold tracking-tight text-slate-200">
+          Скидки по сумме заказа:
+        </p>
+        <ul className="mt-1.5 space-y-0.5 text-slate-400 sm:hidden">
+          {rules.map((rule, index) => (
+            <li key={rule.percent}>
+              <span className="text-brand-teal">{rule.percent}%</span>{" "}
+              <span className="text-slate-500">·</span>{" "}
+              {getRangeLabel(index)}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-1.5 hidden text-slate-400 sm:block">
+          {rules.map((rule, index) => (
+            <span key={rule.percent}>
+              {index > 0 ? " · " : ""}
+              <span className="font-medium text-brand-teal">{rule.percent}%</span>{" "}
+              {getRangeLabel(index)}
+            </span>
+          ))}
+        </p>
+      </div>
+    );
+  }
 
   if (compact) {
     return (

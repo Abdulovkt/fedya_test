@@ -25,7 +25,7 @@ export default async function CheckoutPage() {
         </p>
         <Link
           href="/catalog"
-          className="mt-6 inline-block rounded-xl bg-brand px-6 py-2 font-semibold text-white"
+          className="mt-6 inline-block rounded-xl bg-brand-teal px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90"
         >
           В каталог
         </Link>

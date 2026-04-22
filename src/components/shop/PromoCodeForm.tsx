@@ -81,7 +81,7 @@ export function PromoCodeForm({
                   <button
                     type="submit"
                     disabled={pending}
-                    className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
+                    className="rounded-lg bg-brand-teal px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-60"
                   >
                     {pending ? "Проверка..." : "Заменить"}
                   </button>
@@ -111,7 +111,7 @@ export function PromoCodeForm({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
+              className="rounded-lg bg-brand-teal px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-60"
             >
               {pending ? "Проверка..." : "Активировать"}
             </button>

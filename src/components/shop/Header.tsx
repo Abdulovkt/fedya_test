@@ -7,6 +7,7 @@ import { asc } from "drizzle-orm";
 import { getCartItemCount } from "@/lib/cart";
 import { SearchBar } from "@/components/shop/SearchBar";
 import { getSettings } from "@/lib/settings";
+import { HeaderCategoryNav } from "@/components/shop/HeaderCategoryNav";
 import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { CartIcon, TelegramIcon } from "@/components/shop/HeaderIcons";
 
@@ -20,7 +21,7 @@ export async function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-brand-border bg-brand-surface/95 shadow-sm backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-slate-800/90 bg-slate-900/98 shadow-md shadow-black/25 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
             <div className="flex items-center justify-between gap-3 md:contents">
@@ -34,49 +35,38 @@ export async function Header() {
                   alt="FedorPharm"
                   fill
                   priority
-                  className="object-contain"
+                  className="object-contain brightness-0 invert"
                   sizes="138px"
                 />
               </Link>
 
               <div className="flex shrink-0 items-center gap-3 md:order-3">
-                <TelegramIcon url={telegram_url} />
-                <CartIcon count={cartCount} />
+                <TelegramIcon url={telegram_url} dark />
+                <CartIcon count={cartCount} dark />
               </div>
             </div>
 
             <div className="min-w-0 w-full md:order-2 md:min-w-0 md:flex-1">
               <Suspense>
-                <SearchBar categories={cats} />
+                <SearchBar categories={cats} inHeaderDark />
               </Suspense>
             </div>
           </div>
 
-          <nav
-            className="mt-2 -mx-4 flex snap-x snap-mandatory gap-1 overflow-x-auto px-4 pb-1 text-sm md:mx-0 md:px-0"
-            aria-label="Категории"
-          >
-            <Link
-              href="/catalog"
-              className="shrink-0 snap-start whitespace-nowrap rounded-md px-2 py-1.5 text-brand-muted hover:bg-brand-elevated hover:text-brand-heading"
-            >
-              Каталог
-            </Link>
-            {cats.map((c) => (
-              <Link
-                key={c.id}
-                href={`/category/${c.slug}`}
-                className="shrink-0 snap-start whitespace-nowrap rounded-md px-2 py-1.5 text-brand-muted hover:bg-brand-elevated hover:text-brand-heading"
-              >
-                {c.name}
-              </Link>
-            ))}
-          </nav>
+          <div className="relative mt-2 -mx-4 md:mx-0">
+            <div
+              className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-10 bg-gradient-to-l from-slate-900 to-transparent md:hidden"
+              aria-hidden="true"
+            />
+            <div className="px-4 md:px-0">
+              <HeaderCategoryNav categories={cats} dark />
+            </div>
+          </div>
         </div>
       </header>
-      <div className="border-b border-brand-border bg-brand-surface/90">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <DiscountInfo compact />
+      <div className="border-b border-slate-800 bg-slate-900">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
+          <DiscountInfo compact variant="headerBar" />
         </div>
       </div>
     </>

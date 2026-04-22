@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: Props) {
             <button
               type="submit"
               disabled={p.stock <= 0}
-              className="rounded-xl bg-brand px-8 py-3 text-base font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-brand-teal px-8 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               В корзину
             </button>

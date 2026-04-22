@@ -119,7 +119,7 @@ export default async function CartPage() {
             </div>
             <Link
               href="/checkout"
-              className="inline-flex justify-center rounded-xl bg-brand px-8 py-3 font-semibold text-white hover:bg-brand-hover"
+              className="inline-flex justify-center rounded-xl bg-brand-teal px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90"
             >
               Оформить заказ
             </Link>

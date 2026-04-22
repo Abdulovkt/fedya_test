@@ -22,10 +22,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "SportNutrition — спортивное питание",
-    template: "%s — SportNutrition",
+    default: "FedorPharm — спортивное питание",
+    template: "%s — FedorPharm",
   },
-  description: "Интернет-магазин спортивного питания с доставкой.",
+  description:
+    "Интернет-магазин спортивного питания FedorPharm: каталог, доставка, удобное оформление заказа.",
 };
 
 export const viewport: Viewport = {
@@ -47,7 +48,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="flex min-h-full flex-col bg-brand-bg text-brand-muted"
+        className="flex min-h-full flex-col bg-brand-bg text-brand-heading antialiased"
         suppressHydrationWarning
       >
         <Providers session={session}>{children}</Providers>

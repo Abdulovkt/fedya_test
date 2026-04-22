@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-brand-border bg-brand-surface">
+    <footer className="mt-auto border-t border-slate-800 bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div>
@@ -16,40 +16,45 @@ export function Footer() {
                 src="/logo-black.png"
                 alt="FedorPharm"
                 fill
-                className="object-contain"
+                className="object-contain brightness-0 invert"
                 sizes="138px"
               />
             </Link>
           </div>
           <div>
-            <p className="text-sm font-medium text-brand-heading">Магазин</p>
-            <ul className="mt-2 space-y-1 text-sm text-brand-muted">
+            <p className="text-sm font-semibold tracking-tight text-slate-200">
+              Магазин
+            </p>
+            <ul className="mt-2 space-y-1.5 text-sm text-slate-400">
               <li>
-                <Link href="/catalog" className="hover:text-brand-teal">
+                <Link
+                  href="/catalog"
+                  className="transition-colors hover:text-brand-teal"
+                >
                   Каталог
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className="hover:text-brand-teal">
+                <Link href="/cart" className="transition-colors hover:text-brand-teal">
                   Корзина
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-medium text-brand-heading">
+            <p className="text-sm font-semibold tracking-tight text-slate-200">
               Администрирование
             </p>
-            <ul className="mt-2 space-y-1 text-sm text-brand-muted">
+            <ul className="mt-2 space-y-1.5 text-sm text-slate-400">
               <li>
-                <Link href="/admin" className="hover:text-brand-teal">
+                <Link href="/admin" className="transition-colors hover:text-brand-teal">
                   Панель администратора
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <p className="mt-8 text-center text-xs text-brand-muted/70">
+        <p className="mt-8 text-center text-xs text-slate-600">
           © {new Date().getFullYear()}. Все права защищены.
         </p>
       </div>

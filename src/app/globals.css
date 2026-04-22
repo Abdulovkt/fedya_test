@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* Medilazar / пример: светлый фон, заголовки #1d2a38, текст #7d879c, акцент #e02c5c */
+/* Витрина: холодный фон, плотный текст (slate), акценты brand + teal */
 :root {
-  --background: #f5f6f8;
-  --foreground: #7d879c;
+  --background: #eceef2;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,13 +12,15 @@
   --color-brand: #e02c5c;
   --color-brand-hover: #bf1d48;
   --color-brand-secondary: #eb3a7b;
-  --color-brand-muted: #7d879c;
-  --color-brand-heading: #1d2a38;
-  --color-brand-bg: #f5f6f8;
+  --color-brand-muted: #475569;
+  --color-brand-heading: #0f172a;
+  --color-brand-bg: #eceef2;
   --color-brand-surface: #ffffff;
-  --color-brand-elevated: #fafbfc;
-  --color-brand-border: #e2e8f0;
+  --color-brand-elevated: #f4f5f8;
+  --color-brand-border: #cbd5e1;
   --color-brand-teal: #24aeb1;
+  --color-header: #0f172a;
+  --color-header-border: #1e293b;
   --font-sans: var(--font-montserrat), var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }

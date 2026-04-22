@@ -113,7 +113,7 @@ export function CheckoutForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-brand py-3 font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
+        className="w-full rounded-xl bg-brand-teal py-3 font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-60"
       >
         {pending ? "Отправка…" : "Подтвердить заказ"}
       </button>
