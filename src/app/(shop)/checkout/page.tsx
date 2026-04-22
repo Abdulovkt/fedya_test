@@ -69,8 +69,9 @@ export default async function CheckoutPage() {
           </div>
           {needsCdekPickup && (
             <p className="mt-3 rounded-lg border border-brand-border bg-brand-surface/50 px-3 py-2 text-xs text-brand-muted">
-              В заказе есть товары с отгрузкой СДЭК — укажите в форме слева пункт выдачи (адрес, код
-              ПВЗ или комментарий), иначе заказ не оформить.
+              В заказе есть товары с отгрузкой СДЭК — в форме слева укажите{" "}
+              <span className="font-medium text-brand-heading">точный адрес ПВЗ</span> (как в
+              личном кабинете/на карте СДЭК), иначе заказ не оформить.
             </p>
           )}
           <div className="mt-4 space-y-4">

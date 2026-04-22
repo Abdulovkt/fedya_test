@@ -68,8 +68,8 @@ export default async function CartPage() {
             </h2>
             <p className="mt-1 text-xs text-brand-muted">
               Товары отгружаются отдельно: для Почты России к сумме заказа может добавляться
-              настроенная в магазине доставка. СДЭК в счёт магазина не входит — при оформлении
-              укажите ПВЗ.
+              настроенная в магазине доставка. СДЭК в счёт магазина не входит — при оформлении укажите
+              точный адрес ПВЗ (с сайта cdek.ru).
             </p>
             <div className="mt-4 space-y-8">
               {FULFILLMENT_ORDER.map((ft) => {
@@ -169,7 +169,7 @@ export default async function CartPage() {
               )}
               {delivery.hasCdek && (
                 <p className="text-sm text-brand-muted">
-                  Доставка СДЭК: оплачивается отдельно (при оформлении укажите пункт выдачи).
+                  Доставка СДЭК: оплачивается отдельно; при оформлении — полный адрес ПВЗ.
                 </p>
               )}
               <p className="text-lg text-brand-heading">

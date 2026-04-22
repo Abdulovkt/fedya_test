@@ -17,6 +17,7 @@ import {
   buildPublicPayPassClientRequestId,
   generateUniquePublicOrderNumber,
 } from "@/lib/order-number";
+import { CDEK_PVZ_TEXT_MIN_LENGTH } from "@/lib/shipping";
 
 const CDEK_PVZ_MAX_LEN = 2000;
 
@@ -120,7 +121,20 @@ export async function placeOrder(
   if (amounts.delivery.hasCdek) {
     if (!cdekTrimmed) {
       return {
-        fieldErrors: { cdekPickupPoint: ["Укажите пункт выдачи СДЭК (адрес, код ПВЗ)"] },
+        fieldErrors: {
+          cdekPickupPoint: [
+            "Укажите полный адрес ПВЗ СДЭК (как в карточке пункта на cdek.ru) или полный номер/название офиса",
+          ],
+        },
+      };
+    }
+    if (cdekTrimmed.length < CDEK_PVZ_TEXT_MIN_LENGTH) {
+      return {
+        fieldErrors: {
+          cdekPickupPoint: [
+            `Слишком кратко — нужен полный адрес ПВЗ (не меньше ${CDEK_PVZ_TEXT_MIN_LENGTH} символов, с городом и улицей)`,
+          ],
+        },
       };
     }
   }

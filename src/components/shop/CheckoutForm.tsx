@@ -1,10 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import {
-  placeOrder,
-  type CheckoutState,
-} from "@/app/actions/checkout";
+import { placeOrder, type CheckoutState } from "@/app/actions/checkout";
+import { CDEK_PVZ_TEXT_MIN_LENGTH } from "@/lib/shipping";
 
 const initialState: CheckoutState = {};
 
@@ -115,19 +113,32 @@ export function CheckoutForm({
       </div>
       {needsCdekPickup ? (
         <div>
-          <label htmlFor="cdekPickupPoint" className="block text-sm text-brand-muted">
-            Пункт выдачи СДЭК
+          <label htmlFor="cdekPickupPoint" className="block text-sm font-medium text-brand-heading">
+            Точный адрес пункта выдачи СДЭК (ПВЗ)
           </label>
-          <p className="mt-0.5 text-xs text-brand-muted">
-            Адрес ПВЗ, код офиса или краткий комментарий — как вам удобнее.
+          <p id="cdekPickupPoint-hint" className="mt-0.5 text-xs text-brand-muted">
+            Скопируйте из карточки ПВЗ на{" "}
+            <a
+              href="https://www.cdek.ru/ru/offices"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-brand underline decoration-brand/30 underline-offset-2 hover:decoration-brand"
+            >
+              cdek.ru
+            </a>{" "}
+            полный адрес: город, улица, дом, корпус (и при необходимости — код офиса). Одной строки с
+            «код 1234» без адреса недостаточно.
           </p>
           <textarea
             id="cdekPickupPoint"
             name="cdekPickupPoint"
             required
-            rows={3}
+            minLength={CDEK_PVZ_TEXT_MIN_LENGTH}
+            rows={4}
+            aria-describedby="cdekPickupPoint-hint"
             className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
-            placeholder="Например: ул. …, СДЭК, код 1234"
+            placeholder="Новосибирск, ул. Ленина, д. 12, к. 2, ПВЗ СДЭК, код NSK12"
+            autoComplete="off"
           />
           {state.fieldErrors?.cdekPickupPoint?.[0] ? (
             <p className="mt-1 text-xs text-red-400">{state.fieldErrors.cdekPickupPoint[0]}</p>

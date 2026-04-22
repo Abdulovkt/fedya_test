@@ -1,3 +1,6 @@
+/** Мин. длина текста про ПВЗ: полный адрес (город, улица, дом) или полный код/название офиса из cdek.ru. */
+export const CDEK_PVZ_TEXT_MIN_LENGTH = 20;
+
 export const FULFILLMENT_TYPES = ["russian_post", "cdek"] as const;
 export type FulfillmentType = (typeof FULFILLMENT_TYPES)[number];
 
