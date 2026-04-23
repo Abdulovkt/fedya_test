@@ -75,23 +75,25 @@ export function ChatBox({
   }
 
   return (
-    <div className="flex h-[520px] flex-col overflow-hidden rounded-2xl border border-brand-border shadow-md">
+    <div className="flex h-[min(75vh,760px)] min-h-[560px] w-full flex-col overflow-hidden rounded-2xl border border-brand-border shadow-lg sm:rounded-3xl">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-brand-border bg-brand-surface px-4 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-brand">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div className="flex shrink-0 items-center gap-4 border-b border-brand-border bg-brand-surface px-5 py-4 sm:px-6">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-brand-heading">Чат с магазином</p>
-          <p className="text-xs text-brand-muted">Заказ {orderNumber} · Ответим в ближайшее время</p>
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-brand-heading sm:text-lg">Чат с магазином</p>
+          <p className="mt-0.5 text-sm text-brand-muted">
+            Заказ {orderNumber} · Ответим в ближайшее время
+          </p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-[#f0f2f5] px-4 py-4 space-y-2">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f0f2f5] px-4 py-5 sm:px-6 sm:py-6">
         {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="rounded-full bg-black/10 px-3 py-1 text-xs text-gray-500">
+            <span className="rounded-full bg-black/8 px-4 py-1.5 text-sm text-slate-600">
               Задайте любой вопрос по вашему заказу
             </span>
           </div>
@@ -100,19 +102,31 @@ export function ChatBox({
           const isMe = m.sender === "customer";
           return (
             <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[78%] ${isMe ? "items-end" : "items-start"} flex flex-col`}>
+              <div
+                className={`flex max-w-[min(100%,32rem)] flex-col sm:max-w-[85%] ${
+                  isMe ? "items-end" : "items-start"
+                }`}
+              >
                 {/* Sender label */}
-                <span className={`mb-0.5 text-xs font-semibold ${isMe ? "text-right text-brand/80" : "text-left text-brand-teal"}`}>
+                <span
+                  className={`mb-1 text-xs font-semibold sm:text-sm ${
+                    isMe ? "text-right text-brand/80" : "text-left text-brand-teal"
+                  }`}
+                >
                   {isMe ? "Вы" : "Продавец"}
                 </span>
                 {/* Bubble */}
-                <div className={`relative rounded-2xl px-4 py-2.5 shadow-sm ${
-                  isMe
-                    ? "rounded-tr-sm bg-brand text-white"
-                    : "rounded-tl-sm bg-white text-brand-heading border border-brand-border/50"
-                }`}>
-                  <MessageText text={m.text} isDark={isMe} />
-                  <p className={`mt-1 text-right text-[11px] ${isMe ? "text-white/60" : "text-brand-muted/60"}`}>
+                <div
+                  className={`relative rounded-2xl px-4 py-3 shadow-sm sm:px-5 sm:py-3.5 ${
+                    isMe
+                      ? "rounded-tr-sm bg-brand text-white"
+                      : "rounded-tl-sm border border-brand-border/50 bg-white text-brand-heading"
+                  }`}
+                >
+                  <MessageText text={m.text} isDark={isMe} className="text-base" />
+                  <p
+                    className={`mt-1.5 text-right text-xs ${isMe ? "text-white/65" : "text-brand-muted/80"}`}
+                  >
                     {new Date(m.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
@@ -124,9 +138,12 @@ export function ChatBox({
       </div>
 
       {/* Input */}
-      <form onSubmit={send} className="border-t border-brand-border bg-brand-surface px-3 py-3">
+      <form
+        onSubmit={send}
+        className="shrink-0 border-t border-brand-border bg-brand-surface px-4 py-4 sm:px-5"
+      >
         {attachment && (
-          <div className="mb-2 flex items-center justify-between rounded-lg border border-brand-border bg-brand-elevated px-3 py-2 text-xs text-brand-muted">
+          <div className="mb-3 flex items-center justify-between rounded-xl border border-brand-border bg-brand-elevated px-4 py-2.5 text-sm text-brand-muted">
             <span className="truncate pr-2">Чек: {attachment.name}</span>
             <button
               type="button"
@@ -140,13 +157,13 @@ export function ChatBox({
             </button>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2 sm:gap-3">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(e); } }}
           placeholder="Сообщение…"
-          className="flex-1 rounded-xl border border-brand-border bg-brand-elevated px-4 py-2 text-sm text-brand-heading outline-none focus:border-brand/50"
+          className="min-h-[3rem] flex-1 rounded-2xl border border-brand-border bg-brand-elevated px-4 py-3 text-base text-brand-heading outline-none transition-colors duration-200 focus:border-brand/50 focus:ring-2 focus:ring-brand/15"
         />
         <input
           ref={fileInputRef}
@@ -161,18 +178,18 @@ export function ChatBox({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-full border border-brand-border p-2 text-brand-muted hover:border-brand/40 hover:text-brand"
+          className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-brand-border text-brand-muted transition-colors duration-200 hover:border-brand/40 hover:bg-brand-elevated hover:text-brand"
           aria-label="Прикрепить чек"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-8.49 8.49a6 6 0 0 1-8.49-8.49l8.49-8.49a4 4 0 0 1 5.66 5.66l-8.5 8.48a2 2 0 1 1-2.82-2.82l7.79-7.78"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-8.49 8.49a6 6 0 0 1-8.49-8.49l8.49-8.49a4 4 0 0 1 5.66 5.66l-8.5 8.48a2 2 0 1 1-2.82-2.82l7.79-7.78"/></svg>
         </button>
         <button
           type="submit"
           disabled={sending || (!text.trim() && !attachment)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-40"
+          className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-brand-teal text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-40"
           aria-label="Отправить"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
         </div>
       </form>

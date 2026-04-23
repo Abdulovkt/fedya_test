@@ -33,13 +33,22 @@ function sanitizeDisplayText(text: string) {
     .join("\n");
 }
 
-export function MessageText({ text, isDark = false }: { text: string; isDark?: boolean }) {
+export function MessageText({
+  text,
+  isDark = false,
+  className = "text-sm",
+}: {
+  text: string;
+  isDark?: boolean;
+  /** Размер текста, например `text-base` для крупного чата */
+  className?: string;
+}) {
   const displayText = sanitizeDisplayText(text);
   const lines = displayText.split("\n");
 
   return (
     <div>
-      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+      <p className={`${className} leading-relaxed whitespace-pre-wrap break-words`}>
         {lines.map((line, lineIndex) => {
           const parts = line.split(LINK_PATTERN);
           return (
