@@ -13,12 +13,11 @@ import {
   reviewProductMinDaysFromSettings,
 } from "@/lib/review-policy";
 import { saveReviewPhotosFromFormData } from "@/lib/uploads";
+import type { ReviewSubmitState } from "@/lib/review-submit-state";
 
 const MAX_REVIEW_PHOTOS = 5;
 const textSchema = z.string().min(1, "Введите текст").max(2000);
 const ratingSchema = z.coerce.number().int().min(1).max(5);
-
-type SubmitState = { ok?: true; error?: string } | null;
 
 type LoadedOrder =
   | {
@@ -61,9 +60,9 @@ async function loadOrderForReview(orderRef: string, token: string): Promise<Load
 }
 
 export async function submitDeliveryReview(
-  _prev: SubmitState,
+  _prev: ReviewSubmitState,
   formData: FormData,
-): Promise<SubmitState> {
+): Promise<ReviewSubmitState> {
   const orderRef = String(formData.get("orderRef") ?? "");
   const token = String(formData.get("token") ?? "");
   const loaded = await loadOrderForReview(orderRef, token);
@@ -121,9 +120,9 @@ export async function submitDeliveryReview(
 }
 
 export async function submitProductReview(
-  _prev: SubmitState,
+  _prev: ReviewSubmitState,
   formData: FormData,
-): Promise<SubmitState> {
+): Promise<ReviewSubmitState> {
   const orderRef = String(formData.get("orderRef") ?? "");
   const token = String(formData.get("token") ?? "");
   const orderItemId = Number(formData.get("orderItemId"));
@@ -216,5 +215,3 @@ export async function submitProductReview(
   revalidatePath("/admin/reviews");
   return { ok: true };
 }
-
-export type { SubmitState as ReviewSubmitState };

@@ -116,6 +116,15 @@ function ensurePromoSchema(db: SqliteDatabase) {
   if (!hasColumn(db, "orders", "public_order_number")) {
     db.exec("ALTER TABLE orders ADD COLUMN public_order_number TEXT;");
   }
+  if (!hasColumn(db, "orders", "delivery_post_kopecks")) {
+    db.exec("ALTER TABLE orders ADD COLUMN delivery_post_kopecks INTEGER NOT NULL DEFAULT 0;");
+  }
+  if (!hasColumn(db, "orders", "delivery_cdek_kopecks")) {
+    db.exec("ALTER TABLE orders ADD COLUMN delivery_cdek_kopecks INTEGER NOT NULL DEFAULT 0;");
+  }
+  if (!hasColumn(db, "orders", "cdek_pickup_point")) {
+    db.exec("ALTER TABLE orders ADD COLUMN cdek_pickup_point TEXT;");
+  }
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS orders_public_order_number_idx ON orders (public_order_number);",
   );

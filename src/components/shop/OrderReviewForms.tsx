@@ -1,11 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import {
-  submitDeliveryReview,
-  submitProductReview,
-  type ReviewSubmitState,
-} from "@/app/actions/reviews";
+import { submitDeliveryReview, submitProductReview } from "@/app/actions/reviews";
+import type { ReviewSubmitState } from "@/lib/review-submit-state";
 import { moderationLabel } from "@/lib/review-display";
 
 type Line = {
