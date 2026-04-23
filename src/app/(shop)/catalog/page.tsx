@@ -4,7 +4,11 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { CatalogCategoryGrid } from "@/components/shop/CatalogCategoryGrid";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
-import { aggregateProductCountForDisplay, type CategoryRecord } from "@/lib/categories";
+import {
+  aggregateProductCountForDisplay,
+  childrenOf,
+  type CategoryRecord,
+} from "@/lib/categories";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Каталог" };
@@ -48,12 +52,21 @@ export default async function CatalogPage({
 
     const roots = allCategories.filter((c) => c.parentId == null);
 
-    const hubList = roots.map((root) => ({
-      id: root.id,
-      name: root.name,
-      slug: root.slug,
-      productCount: aggregateProductCountForDisplay(root, directCount, allCategories),
-    }));
+    const hubList = roots.map((root) => {
+      const subcategories = childrenOf(root.id, allCategories).map((ch) => ({
+        id: ch.id,
+        name: ch.name,
+        slug: ch.slug,
+        productCount: aggregateProductCountForDisplay(ch, directCount, allCategories),
+      }));
+      return {
+        id: root.id,
+        name: root.name,
+        slug: root.slug,
+        productCount: aggregateProductCountForDisplay(root, directCount, allCategories),
+        subcategories,
+      };
+    });
 
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
