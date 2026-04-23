@@ -23,7 +23,11 @@ export function HeaderCatalogNavSlot({
         <CatalogDrawer allCategories={allCategories} dark={dark} />
       </div>
       <div className="hidden lg:block">
-        <HeaderCategoryNav categories={rootCategories} dark={dark} />
+        <HeaderCategoryNav
+          categories={rootCategories}
+          allCategories={allCategories}
+          dark={dark}
+        />
       </div>
     </div>
   );
