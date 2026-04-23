@@ -3,15 +3,21 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { StoryBlocks } from "@/components/shop/StoryBlocks";
+import { PublicReviewCard } from "@/components/shop/PublicReviewCard";
 import { WhyUsPanel } from "@/components/shop/WhyUsPanel";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import {
+  getApprovedDeliveryReviews,
+  getApprovedProductReviewsSiteWide,
+} from "@/lib/reviews-public";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 const REFERENCE_HERO_IMAGE = "/hero.jpg";
 
 export default async function HomePage() {
-  const newProducts = await db
+  const [newProducts, deliveryPreview, productPreview] = await Promise.all([
+    db
     .select({
       id: products.id,
       name: products.name,
@@ -26,7 +32,12 @@ export default async function HomePage() {
     .innerJoin(categories, eq(products.categoryId, categories.id))
     .where(eq(products.isActive, true))
     .orderBy(desc(products.createdAt))
-    .limit(8);
+    .limit(8),
+    getApprovedDeliveryReviews(2),
+    getApprovedProductReviewsSiteWide(2),
+  ]);
+
+  const hasReviewPreview = deliveryPreview.length > 0 || productPreview.length > 0;
 
   return (
     <div>
@@ -100,33 +111,65 @@ export default async function HomePage() {
 
       <section className="order-5 border-t border-brand-border bg-brand-elevated px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <h2 className="text-2xl font-bold text-brand-heading">Отзывы</h2>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
-            {[
-              {
-                name: "Алексей",
-                text: "Заказ пришёл быстро, упаковка целая. Протеин как в описании.",
-              },
-              {
-                name: "Мария",
-                text: "Удобный сайт, понятные категории. Буду заказывать ещё.",
-              },
-              {
-                name: "Дмитрий",
-                text: "Хороший выбор креатина и BCAA. Рекомендую магазин.",
-              },
-            ].map((r) => (
-              <blockquote
-                key={r.name}
-                className="rounded-xl border border-brand-border bg-brand-surface p-5 text-sm text-brand-muted shadow-sm"
-              >
-                <p className="text-brand-heading">&ldquo;{r.text}&rdquo;</p>
-                <footer className="mt-3 text-xs text-brand-muted/90">
-                  — {r.name}
-                </footer>
-              </blockquote>
-            ))}
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-2xl font-bold text-brand-heading">Отзывы</h2>
+            <Link
+              href="/reviews"
+              className="text-sm font-medium text-brand hover:text-brand-teal hover:underline"
+            >
+              Все отзывы
+            </Link>
           </div>
+          {!hasReviewPreview ? (
+            <p className="mt-6 text-sm text-brand-muted">
+              Пока нет опубликованных отзывов. Они появятся здесь после покупки и модерации.
+            </p>
+          ) : (
+            <div className="mt-8 space-y-10">
+              {deliveryPreview.length > 0 && (
+                <div>
+                  <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-muted">
+                    Доставка
+                  </h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {deliveryPreview.map((r) => (
+                      <PublicReviewCard
+                        key={r.id}
+                        kind="delivery"
+                        rating={r.rating}
+                        text={r.text}
+                        photoUrlsJson={r.photoUrls}
+                        createdAt={r.createdAt}
+                        customerName={r.customerName}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {productPreview.length > 0 && (
+                <div>
+                  <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-muted">
+                    Товары
+                  </h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {productPreview.map((r) => (
+                      <PublicReviewCard
+                        key={r.id}
+                        kind="product"
+                        rating={r.rating}
+                        text={r.text}
+                        photoUrlsJson={r.photoUrls}
+                        createdAt={r.createdAt}
+                        customerName={r.customerName}
+                        productName={r.productName}
+                        productSlug={r.productSlug}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
       </div>

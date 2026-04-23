@@ -1,3 +1,9 @@
+/** Имя для отзыва: первое слово из ФИО или «Покупатель». */
+export function displayReviewCustomerName(full: string) {
+  const t = full.trim().split(/\s+/)[0];
+  return t || "Покупатель";
+}
+
 export function parseReviewPhotoUrls(json: string): string[] {
   try {
     const p = JSON.parse(json) as unknown;

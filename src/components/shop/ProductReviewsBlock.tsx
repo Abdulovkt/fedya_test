@@ -3,7 +3,7 @@ import {
   getApprovedProductReviewsForProduct,
   getProductAverageRating,
 } from "@/lib/reviews-public";
-import { parseReviewPhotoUrls } from "@/lib/review-display";
+import { displayReviewCustomerName, parseReviewPhotoUrls } from "@/lib/review-display";
 
 function stars(rating: number) {
   return (
@@ -23,11 +23,6 @@ function starsRow(n: number) {
       ))}
     </span>
   );
-}
-
-function displayCustomerName(full: string) {
-  const t = full.trim().split(/\s+/)[0];
-  return t || "Покупатель";
 }
 
 type Props = { productId: number };
@@ -70,7 +65,7 @@ export async function ProductReviewsBlock({ productId }: Props) {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium text-brand-heading">
-                  {displayCustomerName(r.customerName)}
+                  {displayReviewCustomerName(r.customerName)}
                 </p>
                 <div className="text-sm text-amber-600">{starsRow(r.rating)}</div>
                 <time

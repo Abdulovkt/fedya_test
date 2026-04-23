@@ -40,11 +40,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/reviews/delivery"
-                  className="transition-colors hover:text-brand-teal"
-                >
-                  Отзывы о доставке
+                <Link href="/reviews" className="transition-colors hover:text-brand-teal">
+                  Отзывы
                 </Link>
               </li>
             </ul>

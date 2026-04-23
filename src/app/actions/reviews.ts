@@ -114,7 +114,8 @@ export async function submitDeliveryReview(
     moderationStatus: "pending",
   });
 
-  revalidatePath("/reviews/delivery");
+  revalidatePath("/reviews");
+  revalidatePath("/");
   revalidatePath("/admin/reviews");
   return { ok: true };
 }
@@ -212,6 +213,7 @@ export async function submitProductReview(
 
   revalidatePath(`/product/${productRow.slug}`);
   revalidatePath("/");
+  revalidatePath("/reviews");
   revalidatePath("/admin/reviews");
   return { ok: true };
 }

@@ -73,7 +73,7 @@ export async function moderateCustomerReview(
   }
 
   revalidatePath("/admin/reviews");
-  revalidatePath("/reviews/delivery");
+  revalidatePath("/reviews");
   revalidatePath("/catalog");
   revalidatePath("/");
   if (row.productId) {
