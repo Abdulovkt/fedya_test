@@ -17,7 +17,11 @@ import {
   buildPublicPayPassClientRequestId,
   generateUniquePublicOrderNumber,
 } from "@/lib/order-number";
-import { CDEK_PVZ_TEXT_MIN_LENGTH } from "@/lib/shipping";
+import {
+  CDEK_PVZ_TEXT_MIN_LENGTH,
+  getCdekPvzTextFormatError,
+  getRussianPostAddressFormatError,
+} from "@/lib/shipping";
 
 const CDEK_PVZ_MAX_LEN = 2000;
 
@@ -138,6 +142,10 @@ export async function placeOrder(
         },
       };
     }
+    const cdekFormatError = getCdekPvzTextFormatError(cdekTrimmed);
+    if (cdekFormatError) {
+      return { fieldErrors: { cdekPickupPoint: [cdekFormatError] } };
+    }
   }
 
   const addressTrimmed = (parsed.data.address ?? "").trim();
@@ -150,6 +158,10 @@ export async function placeOrder(
           ],
         },
       };
+    }
+    const postFormatError = getRussianPostAddressFormatError(addressTrimmed);
+    if (postFormatError) {
+      return { fieldErrors: { address: [postFormatError] } };
     }
   }
 

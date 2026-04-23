@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { placeOrder, type CheckoutState } from "@/app/actions/checkout";
-import { CDEK_PVZ_TEXT_MIN_LENGTH } from "@/lib/shipping";
+import { CDEK_PVZ_TEXT_MIN_LENGTH, RUSSIAN_POST_ADDRESS_MIN_LEN } from "@/lib/shipping";
 
 const initialState: CheckoutState = {};
 
@@ -111,8 +111,10 @@ export function CheckoutForm({
               name="address"
               type="text"
               required
+              minLength={RUSSIAN_POST_ADDRESS_MIN_LEN}
               autoComplete="street-address"
               placeholder="630000 Новосибирск ул. Ленина д. 10"
+              title="Как в примере: 6 цифр индекса, пробел, город, ул. …, д. …"
               aria-describedby="address-hint"
               className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
             />
@@ -176,6 +178,7 @@ export function CheckoutForm({
             className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
             placeholder="Новосибирск, ул. Ленина, д. 12, к. 2, ПВЗ СДЭК, код NSK12"
             autoComplete="off"
+            title="Как в примере: город, ул., д., при необходимости корп./кв., ПВЗ, код"
           />
           {state.fieldErrors?.cdekPickupPoint?.[0] ? (
             <p className="mt-1 text-xs text-red-400">{state.fieldErrors.cdekPickupPoint[0]}</p>
