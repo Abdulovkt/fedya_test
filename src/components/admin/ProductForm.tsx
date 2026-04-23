@@ -1,12 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, type UpdateProductState } from "@/app/actions/admin";
+import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
-type Category = { id: number; name: string };
+type Category = {
+  id: number;
+  name: string;
+  parentId: number | null;
+  sortOrder: number;
+};
 
 type Props = {
   categories: Category[];
@@ -25,6 +31,40 @@ type Props = {
     fulfillmentType: FulfillmentType;
   };
 };
+
+function toRows(categories: Category[]): CategoryRecord[] {
+  return categories as unknown as CategoryRecord[];
+}
+
+function getInitialRoot(
+  mode: "create" | "edit",
+  product: Props["product"],
+  categories: Category[],
+): number | "" {
+  const rows = toRows(categories);
+  if (mode === "edit" && product) {
+    const cat = rows.find((c) => c.id === product.categoryId);
+    if (!cat) return "";
+    if (cat.parentId == null) return cat.id;
+    return cat.parentId;
+  }
+  return "";
+}
+
+function getInitialSub(
+  mode: "create" | "edit",
+  product: Props["product"],
+  categories: Category[],
+): "parent" | number {
+  const rows = toRows(categories);
+  if (mode === "edit" && product) {
+    const cat = rows.find((c) => c.id === product.categoryId);
+    if (!cat) return "parent";
+    if (cat.parentId == null) return "parent";
+    return product.categoryId;
+  }
+  return "parent";
+}
 
 export function ProductForm({ categories, mode, product }: Props) {
   const router = useRouter();
@@ -51,6 +91,29 @@ export function ProductForm({ categories, mode, product }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+
+  const rows = useMemo(() => toRows(categories), [categories]);
+  const { roots } = useMemo(() => partitionRootsAndChildren(rows), [rows]);
+
+  const [rootId, setRootId] = useState<number | "">(() => getInitialRoot(mode, product, categories));
+  const [subSelection, setSubSelection] = useState<"parent" | number>(() =>
+    getInitialSub(mode, product, categories),
+  );
+
+  const subcats = useMemo(() => {
+    if (rootId === "") return [];
+    return childrenOf(rootId, rows);
+  }, [rootId, rows]);
+
+  const resolvedCategoryId = useMemo(() => {
+    if (rootId === "") return 0;
+    const subs = childrenOf(rootId, rows);
+    if (subs.length === 0) return rootId;
+    if (subSelection === "parent") return rootId;
+    return subSelection;
+  }, [rootId, subSelection, rows]);
+
+  const canSubmitCategory = resolvedCategoryId > 0;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -83,24 +146,64 @@ export function ProductForm({ categories, mode, product }: Props) {
         <input type="hidden" name="id" value={product.id} />
       ) : null}
 
+      <input type="hidden" name="categoryId" value={String(resolvedCategoryId)} />
+
       <div>
-        <label htmlFor="categoryId" className="text-sm text-brand-muted">
+        <label htmlFor="rootCategoryId" className="text-sm text-brand-muted">
           Категория
         </label>
         <select
-          id="categoryId"
-          name="categoryId"
+          id="rootCategoryId"
           required
-          defaultValue={product?.categoryId}
-          className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+          value={rootId === "" ? "" : String(rootId)}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "") {
+              setRootId("");
+            } else {
+              setRootId(Number(v));
+            }
+            setSubSelection("parent");
+          }}
+          className="mt-1 w-full cursor-pointer rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading transition-colors duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/50 focus-visible:ring-offset-2"
         >
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+          {mode === "create" ? <option value="">Выберите категорию</option> : null}
+          {roots.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
             </option>
           ))}
         </select>
+        <p className="mt-1 text-xs text-brand-muted">Раздел витрины (корневая категория).</p>
       </div>
+
+      {rootId !== "" && subcats.length > 0 ? (
+        <div>
+          <label htmlFor="subCategoryId" className="text-sm text-brand-muted">
+            Подкатегория
+          </label>
+          <select
+            id="subCategoryId"
+            value={subSelection === "parent" ? String(rootId) : String(subSelection)}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              setSubSelection(n === rootId ? "parent" : n);
+            }}
+            className="mt-1 w-full cursor-pointer rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading transition-colors duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/50 focus-visible:ring-offset-2"
+          >
+            <option value={String(rootId)}>Весь раздел</option>
+            {subcats.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-brand-muted">
+            Уточнение внутри «{roots.find((r) => r.id === rootId)?.name ?? "…"}»: весь раздел или конкретная
+            подкатегория.
+          </p>
+        </div>
+      ) : null}
 
       <div>
         <label htmlFor="fulfillmentType" className="text-sm text-brand-muted">
@@ -317,7 +420,7 @@ export function ProductForm({ categories, mode, product }: Props) {
 
       <button
         type="submit"
-        disabled={mode === "edit" && editPending}
+        disabled={(mode === "edit" && editPending) || !canSubmitCategory}
         className="rounded-lg bg-brand px-6 py-2 font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
       >
         {mode === "create"

@@ -7,7 +7,12 @@ export const metadata = { title: "Новый товар" };
 
 export default async function NewProductPage() {
   const cats = await db
-    .select({ id: categories.id, name: categories.name })
+    .select({
+      id: categories.id,
+      name: categories.name,
+      parentId: categories.parentId,
+      sortOrder: categories.sortOrder,
+    })
     .from(categories)
     .orderBy(asc(categories.sortOrder), asc(categories.name));
 
