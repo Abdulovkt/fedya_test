@@ -2,8 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { count, eq } from "drizzle-orm";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -32,6 +30,7 @@ import {
 } from "@/lib/promocodes";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 import { getDisplayOrderNumber } from "@/lib/order-number";
+import { saveUploadedImage } from "@/lib/uploads";
 
 async function requireAdmin() {
   const session = await auth();
@@ -127,19 +126,6 @@ const productSchema = z.object({
   stock: z.coerce.number().int().min(0),
   fulfillmentType: z.enum(FULFILLMENT_TYPES),
 });
-
-async function saveUploadedImage(file: File | null): Promise<string | null> {
-  if (!file || file.size === 0) return null;
-  if (!file.type.startsWith("image/")) return null;
-  if (file.size > 4 * 1024 * 1024) return null;
-  const ext = path.extname(file.name) || ".jpg";
-  const name = `${crypto.randomUUID()}${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  const buf = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(dir, name), buf);
-  return `/uploads/${name}`;
-}
 
 export async function createProduct(formData: FormData) {
   await requireAdmin();
@@ -384,6 +370,17 @@ function parseNonNegativeRub(raw: string): { ok: true; value: string } | { ok: f
   return { ok: true, value: String(n) };
 }
 
+function parseNonNegativeIntString(
+  raw: string,
+  label: string,
+): { ok: true; value: string } | { ok: false; error: string } {
+  const n = Number(String(raw ?? "").trim());
+  if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) {
+    return { ok: false, error: `${label}: укажите целое число ≥ 0` };
+  }
+  return { ok: true, value: String(n) };
+}
+
 export async function saveEmailSettings(
   _prev: SaveSettingsState,
   formData: FormData,
@@ -396,6 +393,12 @@ export async function saveEmailSettings(
     const post = parseNonNegativeRub(data.delivery_russian_post_rub);
     if (!post.ok) return { error: post.error };
     data.delivery_russian_post_rub = post.value;
+    const reviewDays = parseNonNegativeIntString(
+      data.review_product_min_days_after_delivered,
+      "Дни до отзыва о товаре",
+    );
+    if (!reviewDays.ok) return { error: reviewDays.error };
+    data.review_product_min_days_after_delivered = reviewDays.value;
     await saveSettings(data);
     const verifyResult = await verifyEmailTransport();
     revalidatePath("/admin/settings");
@@ -444,10 +447,17 @@ export async function updateOrderStatus(formData: FormData) {
     return;
   }
 
-  await db
-    .update(orders)
-    .set({ status, updatedAt: new Date() })
-    .where(eq(orders.id, id));
+  const now = new Date();
+  const setOrder: {
+    status: string;
+    updatedAt: Date;
+    deliveredAt?: Date;
+  } = { status, updatedAt: now };
+  if (status === "delivered" && order.status !== "delivered") {
+    setOrder.deliveredAt = now;
+  }
+
+  await db.update(orders).set(setOrder).where(eq(orders.id, id));
 
   if (message) {
     const statusMeta = getStatusMeta(status);

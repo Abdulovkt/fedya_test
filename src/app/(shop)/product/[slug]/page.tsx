@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatPrice, getStockLabel } from "@/lib/format";
 import { fulfillmentLabel, normalizeFulfillmentType } from "@/lib/shipping";
+import { ProductReviewsBlock } from "@/components/shop/ProductReviewsBlock";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -112,6 +113,8 @@ export default async function ProductPage({ params }: Props) {
           </form>
         </div>
       </div>
+
+      <ProductReviewsBlock productId={p.id} />
     </div>
   );
 }

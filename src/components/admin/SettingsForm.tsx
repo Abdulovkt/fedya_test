@@ -64,6 +64,13 @@ export function SettingsForm({ current }: { current: EmailSettings }) {
           defaultValue={current.delivery_russian_post_rub}
           placeholder="0"
         />
+        <Field
+          name="review_product_min_days_after_delivered"
+          label="Дней после доставки до отзыва о товаре"
+          hint="0 — можно оставить сразу после доставки; больше 0 — отзыв о товаре «после использования» (от даты доставки)"
+          defaultValue={current.review_product_min_days_after_delivered}
+          placeholder="0"
+        />
       </section>
 
       {/* PayPass */}

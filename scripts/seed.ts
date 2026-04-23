@@ -25,7 +25,7 @@ async function main() {
 
   const catRows = await db.select().from(categories).limit(1);
   if (!catRows.length) {
-    const cats = await db
+    const cats = (await db
       .insert(categories)
       .values([
         { name: "Протеин", slug: "protein", sortOrder: 1 },
@@ -33,7 +33,7 @@ async function main() {
         { name: "BCAA и аминокислоты", slug: "bcaa", sortOrder: 3 },
         { name: "Витамины и добавки", slug: "vitamins", sortOrder: 4 },
       ])
-      .returning();
+      .returning()) as (typeof categories.$inferSelect)[];
 
     const protein = cats.find((c) => c.slug === "protein")!;
     const creatine = cats.find((c) => c.slug === "creatine")!;

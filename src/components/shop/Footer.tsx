@@ -39,6 +39,14 @@ export function Footer() {
                   Корзина
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/reviews/delivery"
+                  className="transition-colors hover:text-brand-teal"
+                >
+                  Отзывы о доставке
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

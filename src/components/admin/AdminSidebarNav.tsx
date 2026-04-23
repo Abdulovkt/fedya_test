@@ -12,6 +12,7 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/admin/reports", label: "Отчёты" },
   { href: "/admin/promocodes", label: "Промокоды" },
   { href: "/admin/chats", label: "Чаты" },
+  { href: "/admin/reviews", label: "Отзывы" },
   { href: "/admin/settings", label: "Настройки" },
 ];
 

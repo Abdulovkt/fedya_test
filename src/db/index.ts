@@ -139,11 +139,40 @@ function ensurePromoSchema(db: SqliteDatabase) {
   }
 }
 
+function ensureCustomerReviewsSchema(db: SqliteDatabase) {
+  if (!hasColumn(db, "orders", "delivered_at")) {
+    db.exec("ALTER TABLE orders ADD COLUMN delivered_at INTEGER;");
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customer_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      review_key TEXT NOT NULL UNIQUE,
+      kind TEXT NOT NULL,
+      order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      order_item_id INTEGER REFERENCES order_items(id) ON DELETE CASCADE,
+      product_id INTEGER REFERENCES products(id) ON DELETE RESTRICT,
+      rating INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      photo_urls TEXT NOT NULL DEFAULT '[]',
+      moderation_status TEXT NOT NULL DEFAULT 'pending',
+      rejection_reason TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+    );
+    CREATE INDEX IF NOT EXISTS customer_reviews_product_mod
+      ON customer_reviews (product_id, moderation_status);
+    CREATE INDEX IF NOT EXISTS customer_reviews_order ON customer_reviews (order_id);
+    CREATE INDEX IF NOT EXISTS customer_reviews_kind ON customer_reviews (kind);
+  `);
+}
+
 function openSqlite(): SqliteDatabase {
   const Database = require("better-sqlite3") as SqliteCtor;
   const sqlite = globalForDb.sqlite ?? new Database(getDatabasePath());
   sqlite.pragma("journal_mode = WAL");
   ensurePromoSchema(sqlite);
+  ensureCustomerReviewsSchema(sqlite);
 
   if (process.env.NODE_ENV !== "production") {
     globalForDb.sqlite = sqlite;

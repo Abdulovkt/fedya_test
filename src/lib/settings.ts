@@ -16,6 +16,8 @@ export const SETTING_KEYS = [
   "paypass_sync_secret",
   /** Фикс. доставка почтой России за заказ, ₽ (строка для формы). */
   "delivery_russian_post_rub",
+  /** Мин. полных суток после доставки, чтобы оставить отзыв о товаре (0 — сразу). */
+  "review_product_min_days_after_delivered",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -44,6 +46,7 @@ export async function getSettings(): Promise<EmailSettings> {
     paypass_api_key: map.paypass_api_key ?? process.env.PAYPASS_API_KEY ?? "",
     paypass_sync_secret: map.paypass_sync_secret ?? process.env.PAYPASS_SYNC_SECRET ?? "",
     delivery_russian_post_rub: map.delivery_russian_post_rub ?? "0",
+    review_product_min_days_after_delivered: map.review_product_min_days_after_delivered ?? "0",
   };
 }
 

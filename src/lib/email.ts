@@ -131,7 +131,9 @@ export async function sendOrderStatusEmail({
 
   const siteUrl = await getSiteUrl();
   const from = await getFrom();
-  const chatUrl = `${siteUrl}/chat/${orderRef ?? String(orderId)}?token=${chatToken}`;
+  const ref = orderRef ?? String(orderId);
+  const chatUrl = `${siteUrl}/chat/${ref}?token=${chatToken}`;
+  const reviewsUrl = `${siteUrl}/order/${encodeURIComponent(ref)}/reviews?token=${encodeURIComponent(chatToken)}`;
   const statusMeta = getStatusMeta(status);
 
   const statusColors: Record<string, string> = {
@@ -164,6 +166,19 @@ export async function sendOrderStatusEmail({
            style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
           Открыть чат с магазином
         </a>
+        ${
+          status === "delivered"
+            ? `
+        <p style="margin-top:20px;font-size:14px;color:#1d2a38">
+          Поделитесь впечатлением о доставке и товарах — отзыв появится на сайте после проверки.
+        </p>
+        <a href="${reviewsUrl}"
+           style="display:inline-block;margin-top:10px;padding:12px 24px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
+          Оставить отзыв о доставке и товарах
+        </a>
+        `
+            : ""
+        }
         <p style="margin-top:24px;font-size:13px;color:#7d879c">
           Ссылка на чат привязана к вашему заказу и действует постоянно.
         </p>

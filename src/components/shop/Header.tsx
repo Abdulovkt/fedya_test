@@ -13,7 +13,13 @@ import { CartIcon, TelegramIcon } from "@/components/shop/HeaderIcons";
 
 export async function Header() {
   const allCats = await db
-    .select()
+    .select({
+      id: categories.id,
+      name: categories.name,
+      slug: categories.slug,
+      parentId: categories.parentId,
+      sortOrder: categories.sortOrder,
+    })
     .from(categories)
     .orderBy(asc(categories.sortOrder), asc(categories.name));
   const rootCats = allCats.filter((c) => c.parentId == null);

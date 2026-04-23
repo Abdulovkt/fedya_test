@@ -4,12 +4,14 @@ import {
   text,
   integer,
   uniqueIndex,
+  index,
+  type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 
 export const categories = sqliteTable("categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   /** Родительская категория; null = корневая (макс. уровень вложенности — один: родитель → подкатегория). */
-  parentId: integer("parent_id").references(() => categories.id, {
+  parentId: integer("parent_id").references((): AnySQLiteColumn => categories.id, {
     onDelete: "set null",
   }),
   name: text("name").notNull(),
@@ -166,6 +168,8 @@ export const orders = sqliteTable("orders", {
   totalAmount: integer("total_amount").notNull(),
   chatToken: text("chat_token"),
   adminLastReadAt: integer("admin_last_read_at"),
+  /** Время перевода в статус «доставлен» (для отзывов «после использования»). */
+  deliveredAt: integer("delivered_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -197,6 +201,51 @@ export const orderItems = sqliteTable("order_items", {
   quantity: integer("quantity").notNull(),
   priceAtOrder: integer("price_at_order").notNull(),
 });
+
+export const customerReviews = sqliteTable(
+  "customer_reviews",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /**
+     * Уникальный ключ: `d:{orderId}` — доставка, `p:{orderItemId}` — товар по позиции.
+     */
+    reviewKey: text("review_key").notNull().unique(),
+    kind: text("kind", { enum: ["delivery", "product"] }).notNull(),
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    orderItemId: integer("order_item_id").references(() => orderItems.id, {
+      onDelete: "cascade",
+    }),
+    productId: integer("product_id").references(() => products.id, {
+      onDelete: "restrict",
+    }),
+    rating: integer("rating").notNull(),
+    text: text("text").notNull(),
+    /** JSON-массив путей `/uploads/...` */
+    photoUrls: text("photo_urls").notNull().default("[]"),
+    moderationStatus: text("moderation_status", {
+      enum: ["pending", "approved", "rejected"],
+    })
+      .notNull()
+      .default("pending"),
+    rejectionReason: text("rejection_reason"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => ({
+    productModIdx: index("customer_reviews_product_mod").on(
+      t.productId,
+      t.moderationStatus,
+    ),
+    orderIdx: index("customer_reviews_order").on(t.orderId),
+    kindIdx: index("customer_reviews_kind").on(t.kind),
+  }),
+);
 
 export const promoCodeUsages = sqliteTable(
   "promo_code_usages",
@@ -235,6 +284,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   cartItems: many(cartItems),
   orderItems: many(orderItems),
   promoCodeProducts: many(promoCodeProducts),
+  customerReviews: many(customerReviews),
 }));
 
 export const cartsRelations = relations(carts, ({ many }) => ({
@@ -268,12 +318,26 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
 export const ordersRelations = relations(orders, ({ many }) => ({
   items: many(orderItems),
   promoCodeUsages: many(promoCodeUsages),
+  customerReviews: many(customerReviews),
 }));
 
-export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({
   order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
   product: one(products, {
     fields: [orderItems.productId],
+    references: [products.id],
+  }),
+  reviews: many(customerReviews),
+}));
+
+export const customerReviewsRelations = relations(customerReviews, ({ one }) => ({
+  order: one(orders, { fields: [customerReviews.orderId], references: [orders.id] }),
+  orderItem: one(orderItems, {
+    fields: [customerReviews.orderItemId],
+    references: [orderItems.id],
+  }),
+  product: one(products, {
+    fields: [customerReviews.productId],
     references: [products.id],
   }),
 }));
