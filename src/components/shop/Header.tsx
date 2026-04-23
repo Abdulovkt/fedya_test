@@ -7,7 +7,7 @@ import { asc } from "drizzle-orm";
 import { getCartItemCount } from "@/lib/cart";
 import { SearchBar } from "@/components/shop/SearchBar";
 import { getSettings } from "@/lib/settings";
-import { HeaderCategoryNav } from "@/components/shop/HeaderCategoryNav";
+import { HeaderCatalogNavSlot } from "@/components/shop/HeaderCatalogNavSlot";
 import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { CartIcon, TelegramIcon } from "@/components/shop/HeaderIcons";
 
@@ -53,13 +53,9 @@ export async function Header() {
             </div>
           </div>
 
-          <div className="relative mt-2 -mx-4 md:mx-0">
-            <div
-              className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-10 bg-gradient-to-l from-slate-900 to-transparent md:hidden"
-              aria-hidden="true"
-            />
+          <div className="mt-2 -mx-4 md:mx-0">
             <div className="px-4 md:px-0">
-              <HeaderCategoryNav categories={cats} dark />
+              <HeaderCatalogNavSlot categories={cats} dark />
             </div>
           </div>
         </div>

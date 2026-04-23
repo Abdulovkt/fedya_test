@@ -1,20 +1,82 @@
-import { asc, eq, and } from "drizzle-orm";
+import { asc, and, count, eq } from "drizzle-orm";
+import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { CatalogCategoryGrid } from "@/components/shop/CatalogCategoryGrid";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Каталог" };
 
-type SearchParams = Promise<{ q?: string; category?: string }>;
+type SearchParams = Promise<{
+  q?: string;
+  category?: string;
+  /** Показать сетку всех товаров (старый режим) */
+  view?: string;
+}>;
+
+function isViewAll(view: string | undefined): boolean {
+  return (view ?? "").trim().toLowerCase() === "all";
+}
 
 export default async function CatalogPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { q, category } = await searchParams;
+  const { q, category, view } = await searchParams;
   const needle = q?.trim().toLowerCase() ?? "";
+  const showProductGrid = Boolean(needle || category?.trim() || isViewAll(view));
+  const showCategoryHub = !showProductGrid;
+
+  if (showCategoryHub) {
+    const categoryRows = await db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+        productCount: count(products.id),
+      })
+      .from(categories)
+      .leftJoin(
+        products,
+        and(
+          eq(products.categoryId, categories.id),
+          eq(products.isActive, true),
+        ),
+      )
+      .groupBy(categories.id)
+      .orderBy(asc(categories.sortOrder), asc(categories.name));
+
+    const hubList = categoryRows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      productCount: Number(c.productCount),
+    }));
+
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-brand-heading">Каталог</h1>
+        <p className="mt-2 max-w-2xl text-brand-muted">
+          Выберите раздел, чтобы смотреть товары. Или сразу{" "}
+          <Link
+            href="/catalog?view=all"
+            className="font-medium text-brand hover:text-brand-teal hover:underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/50 focus-visible:ring-offset-2"
+          >
+            открыть все товары списком
+          </Link>
+          .
+        </p>
+
+        {hubList.length > 0 ? (
+          <CatalogCategoryGrid categories={hubList} />
+        ) : (
+          <p className="mt-8 text-brand-muted">Категории скоро появятся.</p>
+        )}
+      </div>
+    );
+  }
 
   const conditions = [eq(products.isActive, true)];
   if (category?.trim()) conditions.push(eq(categories.slug, category.trim()));
@@ -35,7 +97,6 @@ export default async function CatalogPage({
     .where(and(...conditions))
     .orderBy(asc(categories.sortOrder), asc(products.name));
 
-  // SQLite lower() is ASCII-only — filter Cyrillic case-insensitively in JS
   const list = needle
     ? rows.filter((p) => p.name.toLowerCase().includes(needle))
     : rows;
@@ -44,14 +105,24 @@ export default async function CatalogPage({
     ? `Результаты поиска: «${q!.trim()}»`
     : category
       ? (list[0]?.categoryName ?? "Каталог")
-      : "Каталог";
+      : isViewAll(view)
+        ? "Все товары"
+        : "Каталог";
+
+  const isAllProducts = isViewAll(view) && !needle && !category;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-brand-heading">{title}</h1>
-      {!needle && !category && (
+      {isAllProducts && (
         <p className="mt-2 text-brand-muted">
-          Все активные товары. Выберите категорию в меню или откройте карточку.
+          Все активные товары.{" "}
+          <Link
+            href="/catalog"
+            className="font-medium text-brand hover:text-brand-teal hover:underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/50 focus-visible:ring-offset-2"
+          >
+            Смотреть по категориям
+          </Link>
         </p>
       )}
 
