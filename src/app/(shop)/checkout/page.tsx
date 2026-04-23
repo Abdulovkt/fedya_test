@@ -33,6 +33,7 @@ export default async function CheckoutPage() {
   const pricing = amounts.pricing;
   const { delivery } = amounts;
   const needsCdekPickup = delivery.hasCdek;
+  const hasRussianPost = delivery.hasPost;
 
   if (lines.length === 0) {
     return (
@@ -53,7 +54,11 @@ export default async function CheckoutPage() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-brand-heading">Оформление заказа</h1>
       <div className="mt-8 grid gap-10 lg:grid-cols-2">
-        <CheckoutForm promoCode={rawPromo?.code ?? null} needsCdekPickup={needsCdekPickup} />
+        <CheckoutForm
+          promoCode={rawPromo?.code ?? null}
+          needsCdekPickup={needsCdekPickup}
+          hasRussianPost={hasRussianPost}
+        />
         <div>
           <h2 className="text-lg font-semibold text-brand-heading">Состав заказа</h2>
           <DiscountInfo compact className="mt-4" subtotal={pricing.subtotal} />

@@ -91,10 +91,11 @@ export async function placeOrder(
       return { error: validationError };
     }
 
+    const addressForPromo = (parsed.data.address ?? "").trim() || undefined;
     const alreadyUsed = await hasPromoBeenUsedByCustomer(appliedPromo.id, {
       email: parsed.data.email,
       customerName: parsed.data.customerName,
-      address: parsed.data.address,
+      address: addressForPromo,
     });
     if (alreadyUsed) {
       return {
@@ -139,6 +140,19 @@ export async function placeOrder(
     }
   }
 
+  const addressTrimmed = (parsed.data.address ?? "").trim();
+  if (amounts.delivery.hasPost) {
+    if (!addressTrimmed) {
+      return {
+        fieldErrors: {
+          address: [
+            "Укажите адрес для отправки Почтой России: индекс, город, улица, дом — одной строкой",
+          ],
+        },
+      };
+    }
+  }
+
   const normalizedEmail = parsed.data.email.trim().toLowerCase();
 
   const chatToken = crypto.randomUUID();
@@ -157,7 +171,7 @@ export async function placeOrder(
           phone: parsed.data.phone,
           email: normalizedEmail,
           telegram: parsed.data.telegram ?? null,
-          address: parsed.data.address ?? null,
+          address: addressTrimmed || null,
           comment: parsed.data.comment ?? null,
           subtotalAmount: pricing.subtotal,
           autoDiscountAmount: pricing.autoDiscountAmount,

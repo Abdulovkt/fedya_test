@@ -9,10 +9,13 @@ const initialState: CheckoutState = {};
 export function CheckoutForm({
   promoCode,
   needsCdekPickup = false,
+  hasRussianPost = false,
 }: {
   promoCode?: string | null;
   /** Показать обязательное поле «ПВЗ СДЭК» */
   needsCdekPickup?: boolean;
+  /** В корзине есть товары с отгрузкой Почтой России — адрес в формате одной строки, обязателен */
+  hasRussianPost?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     placeOrder,
@@ -90,15 +93,49 @@ export function CheckoutForm({
         />
       </div>
       <div>
-        <label htmlFor="address" className="block text-sm text-brand-muted">
-          Адрес доставки (необязательно)
-        </label>
-        <textarea
-          id="address"
-          name="address"
-          rows={2}
-          className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
-        />
+        {hasRussianPost ? (
+          <>
+            <label
+              htmlFor="address"
+              className="block text-sm font-medium text-brand-heading"
+            >
+              Адрес доставки Почтой России
+            </label>
+            <p id="address-hint" className="mt-0.5 text-xs text-brand-muted">
+              Укажите одной строкой, через пробел: <span className="text-brand-heading">индекс</span>,{" "}
+              <span className="text-brand-heading">город</span>, <span className="text-brand-heading">улица</span>,{" "}
+              <span className="text-brand-heading">дом</span> (корпус/кв. — при необходимости в конце строки).
+            </p>
+            <input
+              id="address"
+              name="address"
+              type="text"
+              required
+              autoComplete="street-address"
+              placeholder="630000 Новосибирск ул. Ленина д. 10"
+              aria-describedby="address-hint"
+              className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+            />
+            {state.fieldErrors?.address?.[0] ? (
+              <p className="mt-1 text-xs text-red-400">{state.fieldErrors.address[0]}</p>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <label htmlFor="address" className="block text-sm text-brand-muted">
+              Адрес доставки (необязательно)
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              rows={2}
+              className="mt-1 w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading"
+            />
+            {state.fieldErrors?.address?.[0] ? (
+              <p className="mt-1 text-xs text-red-400">{state.fieldErrors.address[0]}</p>
+            ) : null}
+          </>
+        )}
       </div>
       <div>
         <label htmlFor="comment" className="block text-sm text-brand-muted">
