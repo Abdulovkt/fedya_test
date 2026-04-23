@@ -128,6 +128,15 @@ function ensurePromoSchema(db: SqliteDatabase) {
       "ALTER TABLE products ADD COLUMN fulfillment_type TEXT NOT NULL DEFAULT 'russian_post';",
     );
   }
+
+  if (!hasColumn(db, "categories", "parent_id")) {
+    db.exec(
+      "ALTER TABLE categories ADD COLUMN parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;",
+    );
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS categories_parent_id_idx ON categories (parent_id);",
+    );
+  }
 }
 
 function openSqlite(): SqliteDatabase {

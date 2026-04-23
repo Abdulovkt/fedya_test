@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
 
-type Cat = { id: number; name: string; slug: string };
+type Cat = { id: number; name: string; slug: string; parentId: number | null };
 
 const overlayTransition =
   "transition-opacity duration-200 ease-out motion-reduce:duration-0 motion-reduce:transition-none";
@@ -21,12 +22,13 @@ function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
 }
 
 type Props = {
-  categories: Cat[];
+  allCategories: Cat[];
   /** Стили под тёмную шапку (как в HeaderCategoryNav) */
   dark?: boolean;
 };
 
-export function CatalogDrawer({ categories, dark = false }: Props) {
+export function CatalogDrawer({ allCategories, dark = false }: Props) {
+  const { roots } = partitionRootsAndChildren(allCategories as CategoryRecord[]);
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "";
   const titleId = useId();
@@ -212,20 +214,42 @@ export function CatalogDrawer({ categories, dark = false }: Props) {
                   Все товары
                 </Link>
               </li>
-              {categories.map((c) => {
-                const active = categorySlug === c.slug;
+              {roots.map((c) => {
+                const subs = childrenOf(c.id, allCategories as CategoryRecord[]);
+                const rootActive = categorySlug === c.slug;
                 return (
-                  <li key={c.id}>
+                  <li key={c.id} className="space-y-0.5">
                     <Link
                       href={`/category/${c.slug}`}
                       onClick={close}
                       className={`block rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
-                        active ? itemActive : itemInactive
+                        rootActive ? itemActive : itemInactive
                       }`}
-                      aria-current={active ? "page" : undefined}
+                      aria-current={rootActive ? "page" : undefined}
                     >
                       {c.name}
                     </Link>
+                    {subs.length > 0 ? (
+                      <ul className="ml-1 space-y-0.5 border-l border-slate-600/50 pl-3 dark:border-slate-600/50">
+                        {subs.map((ch) => {
+                          const active = categorySlug === ch.slug;
+                          return (
+                            <li key={ch.id}>
+                              <Link
+                                href={`/category/${ch.slug}`}
+                                onClick={close}
+                                className={`block rounded-lg py-1.5 pr-1 text-sm transition-colors duration-200 ${
+                                  active ? itemActive : itemInactive
+                                }`}
+                                aria-current={active ? "page" : undefined}
+                              >
+                                {ch.name}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : null}
                   </li>
                 );
               })}

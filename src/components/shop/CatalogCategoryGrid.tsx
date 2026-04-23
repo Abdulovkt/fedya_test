@@ -16,14 +16,20 @@ function productCountLabel(n: number): string {
   return `${n} товаров`;
 }
 
+/** База для сетки карточек (без верхнего отступа) */
+export const catalogCategoryGridListClasses =
+  "grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+
 type Props = {
   categories: CatalogCategoryItem[];
+  /** Класс для <ul> (по умолчанию с верхним отступом, как в хабе каталога) */
+  listClassName?: string;
 };
 
-export function CatalogCategoryGrid({ categories }: Props) {
+export function CatalogCategoryGrid({ categories, listClassName }: Props) {
   return (
     <ul
-      className="mt-10 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className={listClassName ?? `mt-10 ${catalogCategoryGridListClasses}`}
     >
       {categories.map((c) => (
         <li key={c.id}>

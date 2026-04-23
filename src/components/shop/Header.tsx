@@ -12,10 +12,11 @@ import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { CartIcon, TelegramIcon } from "@/components/shop/HeaderIcons";
 
 export async function Header() {
-  const cats = await db
+  const allCats = await db
     .select()
     .from(categories)
     .orderBy(asc(categories.sortOrder), asc(categories.name));
+  const rootCats = allCats.filter((c) => c.parentId == null);
   const cartCount = await getCartItemCount();
   const { telegram_url } = await getSettings();
 
@@ -48,14 +49,18 @@ export async function Header() {
 
             <div className="min-w-0 w-full md:order-2 md:min-w-0 md:flex-1">
               <Suspense>
-                <SearchBar categories={cats} inHeaderDark />
+                <SearchBar categories={allCats} inHeaderDark />
               </Suspense>
             </div>
           </div>
 
           <div className="mt-2 -mx-4 md:mx-0">
             <div className="px-4 md:px-0">
-              <HeaderCatalogNavSlot categories={cats} dark />
+              <HeaderCatalogNavSlot
+                allCategories={allCats}
+                rootCategories={rootCats}
+                dark
+              />
             </div>
           </div>
         </div>

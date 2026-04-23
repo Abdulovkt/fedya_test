@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
 
-type Category = { id: number; name: string; slug: string };
+type Category = { id: number; name: string; slug: string; parentId?: number | null };
 
 type Props = {
   categories: Category[];
@@ -48,6 +49,42 @@ export function SearchBar({ categories, inHeaderDark = false }: Props) {
     ? "flex shrink-0 items-center px-3 text-slate-400 transition hover:text-brand-teal"
     : "flex shrink-0 items-center px-3 text-brand-muted transition hover:text-brand-teal";
 
+  const categoryOptions = useMemo(() => {
+    const rows = categories as CategoryRecord[];
+    const hasSubs = rows.some((c) => c.parentId != null);
+    if (!hasSubs) {
+      return rows.map((c) => (
+        <option key={c.id} value={c.slug}>
+          {c.name}
+        </option>
+      ));
+    }
+    const { roots } = partitionRootsAndChildren(rows);
+    const nodes: React.ReactNode[] = [];
+    for (const root of roots) {
+      const subs = childrenOf(root.id, rows);
+      if (subs.length === 0) {
+        nodes.push(
+          <option key={root.id} value={root.slug}>
+            {root.name}
+          </option>,
+        );
+      } else {
+        nodes.push(
+          <optgroup key={root.id} label={root.name}>
+            <option value={root.slug}>Весь раздел</option>
+            {subs.map((ch) => (
+              <option key={ch.id} value={ch.slug}>
+                {ch.name}
+              </option>
+            ))}
+          </optgroup>,
+        );
+      }
+    }
+    return nodes;
+  }, [categories]);
+
   return (
     <form
       onSubmit={submit}
@@ -59,11 +96,7 @@ export function SearchBar({ categories, inHeaderDark = false }: Props) {
         className={selectClass}
       >
         <option value="">Все категории</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.slug}>
-            {c.name}
-          </option>
-        ))}
+        {categoryOptions}
       </select>
 
       <div className="flex min-w-0 flex-1">

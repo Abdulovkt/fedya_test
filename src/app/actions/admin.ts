@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { z } from "zod";
@@ -45,6 +45,8 @@ const categorySchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1).optional(),
   sortOrder: z.coerce.number().int().default(0),
+  /** Пусто / «Корневая» = без родителя. */
+  parentIdRaw: z.string().optional(),
 });
 
 export async function createCategory(formData: FormData) {
@@ -53,14 +55,37 @@ export async function createCategory(formData: FormData) {
     name: String(formData.get("name") ?? ""),
     slug: formData.get("slug")?.toString(),
     sortOrder: formData.get("sortOrder"),
+    parentIdRaw: formData.get("parentId")?.toString() ?? "",
   };
   const parsed = categorySchema.safeParse(raw);
   if (!parsed.success) return;
   const slug = parsed.data.slug?.trim() || slugify(parsed.data.name);
+
+  const parentIdParsed = (() => {
+    const t = parsed.data.parentIdRaw?.trim() ?? "";
+    if (!t || t === "0") return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
+  let parentId: number | null = null;
+  if (parentIdParsed != null) {
+    const [parent] = await db
+      .select({ id: categories.id, parentId: categories.parentId })
+      .from(categories)
+      .where(eq(categories.id, parentIdParsed))
+      .limit(1);
+    if (!parent || parent.parentId != null) {
+      return;
+    }
+    parentId = parent.id;
+  }
+
   await db.insert(categories).values({
     name: parsed.data.name.trim(),
     slug,
     sortOrder: parsed.data.sortOrder,
+    parentId,
   });
   revalidatePath("/admin/categories");
   revalidatePath("/");
@@ -70,7 +95,20 @@ export async function deleteCategory(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) return;
-  await db.delete(categories).where(eq(categories.id, id));
+  const [childRow] = await db
+    .select({ n: count() })
+    .from(categories)
+    .where(eq(categories.parentId, id));
+  if (childRow && Number(childRow.n) > 0) {
+    revalidatePath("/admin/categories");
+    return;
+  }
+  try {
+    await db.delete(categories).where(eq(categories.id, id));
+  } catch {
+    revalidatePath("/admin/categories");
+    return;
+  }
   revalidatePath("/admin/categories");
   revalidatePath("/");
 }

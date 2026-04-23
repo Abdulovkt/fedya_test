@@ -8,6 +8,10 @@ import {
 
 export const categories = sqliteTable("categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  /** Родительская категория; null = корневая (макс. уровень вложенности — один: родитель → подкатегория). */
+  parentId: integer("parent_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   sortOrder: integer("sort_order").notNull().default(0),

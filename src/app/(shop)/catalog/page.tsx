@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { CatalogCategoryGrid } from "@/components/shop/CatalogCategoryGrid";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { aggregateProductCountForDisplay, type CategoryRecord } from "@/lib/categories";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Каталог" };
@@ -30,29 +31,28 @@ export default async function CatalogPage({
   const showCategoryHub = !showProductGrid;
 
   if (showCategoryHub) {
-    const categoryRows = await db
-      .select({
-        id: categories.id,
-        name: categories.name,
-        slug: categories.slug,
-        productCount: count(products.id),
-      })
+    const allCategories = (await db
+      .select()
       .from(categories)
-      .leftJoin(
-        products,
-        and(
-          eq(products.categoryId, categories.id),
-          eq(products.isActive, true),
-        ),
-      )
-      .groupBy(categories.id)
-      .orderBy(asc(categories.sortOrder), asc(categories.name));
+      .orderBy(asc(categories.sortOrder), asc(categories.name))) as CategoryRecord[];
 
-    const hubList = categoryRows.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      productCount: Number(c.productCount),
+    const countRows = await db
+      .select({ categoryId: products.categoryId, c: count() })
+      .from(products)
+      .where(eq(products.isActive, true))
+      .groupBy(products.categoryId);
+
+    const directCount = new Map<number, number>(
+      countRows.map((r) => [r.categoryId, Number(r.c)]),
+    );
+
+    const roots = allCategories.filter((c) => c.parentId == null);
+
+    const hubList = roots.map((root) => ({
+      id: root.id,
+      name: root.name,
+      slug: root.slug,
+      productCount: aggregateProductCountForDisplay(root, directCount, allCategories),
     }));
 
     return (
