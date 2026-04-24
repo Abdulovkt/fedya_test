@@ -79,7 +79,7 @@ export default async function HomePage() {
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl border border-brand-teal/40">
           <Image
             src={REFERENCE_HERO_IMAGE}
-            alt="Спортивное питание и тренировки"
+            alt="Fedor Pharm Shop — спортивное питание"
             fill
             priority
             className="object-cover object-center"
@@ -87,13 +87,18 @@ export default async function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/35" />
           <div className="relative flex flex-col items-start justify-center px-6 py-16 sm:px-12 sm:py-32 lg:px-16 lg:py-40">
-            <h1 className="max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
-              Интернет-магазин
-              <br />
-              Спортивного питания
+            <h1 className="max-w-3xl">
+              <span className="block text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow-md sm:text-4xl">
+                Интернет-магазин
+              </span>
+              <span className="mt-2 inline-block drop-shadow-[0_4px_24px_rgba(0,0,0,0.45)] motion-reduce:drop-shadow-none sm:mt-3">
+                <span className="block bg-gradient-to-r from-white via-[#b8eef0] to-brand-teal bg-clip-text pb-0.5 text-4xl font-bold leading-[1.08] tracking-[-0.02em] text-transparent sm:text-5xl md:text-6xl md:tracking-[-0.03em]">
+                  Fedor Pharm Shop
+                </span>
+              </span>
             </h1>
             <p className="mt-4 max-w-sm text-sm text-white/80 sm:text-base">
-              Купите спортпит с доставкой из России.
+              Быстрая доставка по России.
               <br />
               Большой выбор, лучшие цены.
             </p>
