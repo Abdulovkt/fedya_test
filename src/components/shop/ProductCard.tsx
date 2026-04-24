@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { addToCart } from "@/app/actions/cart";
+import { ProductQualityBadge } from "@/components/shop/ProductQualityBadge";
 import { formatPrice, getStockLabel } from "@/lib/format";
+import type { QualityTier } from "@/lib/product-quality";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
   stock: number;
   categoryName?: string;
   fulfillmentType?: FulfillmentType;
+  qualityTier?: QualityTier;
 };
 
 export function ProductCard({
@@ -24,6 +27,7 @@ export function ProductCard({
   stock,
   categoryName,
   fulfillmentType,
+  qualityTier,
 }: Props) {
   const stockLabel = getStockLabel(stock);
   const href = `/product/${slug}`;
@@ -60,6 +64,7 @@ export function ProductCard({
           </h3>
           <p className="text-lg font-bold tabular-nums text-brand">{formatPrice(price)}</p>
           <div className="flex flex-wrap items-center gap-1.5">
+            {qualityTier ? <ProductQualityBadge tier={qualityTier} /> : null}
             <span
               className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${stockLabel.className}`}
             >

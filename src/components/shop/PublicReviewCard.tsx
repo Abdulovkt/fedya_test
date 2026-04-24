@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { displayReviewCustomerName, parseReviewPhotoUrls } from "@/lib/review-display";
@@ -9,6 +11,48 @@ function starsRow(n: number) {
         <span key={i}>{i < n ? "★" : "☆"}</span>
       ))}
     </span>
+  );
+}
+
+function IconTruck({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M14 18V6h2.2L20 9.3V18" />
+      <path d="M4 18V8h10v10" />
+      <path d="M2 18h20" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </svg>
+  );
+}
+
+function IconPackage({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 16V8l-9-5-9 5v8l9 5 9-5z" />
+      <path d="m3.3 7.7 9 5.1 8.9-5.1" />
+      <path d="M12 22V12.8" />
+    </svg>
   );
 }
 
@@ -36,8 +80,8 @@ export function PublicReviewCard({
   const photos = parseReviewPhotoUrls(photoUrlsJson);
   const isDelivery = kind === "delivery";
   const shell = isDelivery
-    ? "border-l-4 border-brand-teal bg-brand-surface/90"
-    : "border-l-4 border-brand/35 bg-brand-elevated/60";
+    ? "border-l-4 border-brand-teal bg-brand-surface/90 ring-1 ring-brand-teal/15"
+    : "border-l-4 border-brand/35 bg-brand-elevated/60 ring-1 ring-brand/10";
 
   return (
     <blockquote
@@ -45,18 +89,23 @@ export function PublicReviewCard({
     >
       <div className="flex flex-wrap items-center gap-2">
         <span
-          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
             isDelivery
               ? "bg-brand-teal/12 text-brand-teal"
               : "bg-brand/10 text-brand-heading"
           }`}
         >
+          {isDelivery ? (
+            <IconTruck className="h-3.5 w-3.5 shrink-0 opacity-90" />
+          ) : (
+            <IconPackage className="h-3.5 w-3.5 shrink-0 opacity-90" />
+          )}
           {isDelivery ? "Доставка" : "Товар"}
         </span>
         {!isDelivery && productName && productSlug && (
           <Link
             href={`/product/${productSlug}`}
-            className="text-sm font-medium text-brand hover:text-brand-teal hover:underline"
+            className="cursor-pointer text-sm font-medium text-brand hover:text-brand-teal hover:underline"
           >
             {productName}
           </Link>
@@ -82,9 +131,15 @@ export function PublicReviewCard({
               href={src}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative h-20 w-20 overflow-hidden rounded-lg border border-brand-border"
+              className="relative h-20 w-20 cursor-pointer overflow-hidden rounded-lg border border-brand-border"
             >
-              <Image src={src} alt="" fill className="object-cover" sizes="80px" />
+              <Image
+                src={src}
+                alt="Фото из отзыва"
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
             </a>
           ))}
         </div>

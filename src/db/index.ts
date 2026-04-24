@@ -137,6 +137,11 @@ function ensurePromoSchema(db: SqliteDatabase) {
       "ALTER TABLE products ADD COLUMN fulfillment_type TEXT NOT NULL DEFAULT 'russian_post';",
     );
   }
+  if (!hasColumn(db, "products", "quality_tier")) {
+    db.exec(
+      "ALTER TABLE products ADD COLUMN quality_tier TEXT NOT NULL DEFAULT 'standard';",
+    );
+  }
 
   if (!hasColumn(db, "categories", "parent_id")) {
     db.exec(

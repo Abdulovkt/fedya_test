@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { aggregateProductCountForDisplay, childrenOf, type CategoryRecord } from "@/lib/categories";
+import { normalizeQualityTier } from "@/lib/product-quality";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -86,6 +87,7 @@ export default async function CategoryPage({ params }: Props) {
             stock={p.stock}
             categoryName={cat.name}
             fulfillmentType={normalizeFulfillmentType(p.fulfillmentType)}
+            qualityTier={normalizeQualityTier(p.qualityTier)}
           />
         ))}
       </div>

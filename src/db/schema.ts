@@ -41,6 +41,10 @@ export const products = sqliteTable("products", {
   stock: integer("stock").notNull().default(0),
   /** Склад отгрузки: почта России или СДЭК (копейки доставки — в настройках сайта). */
   fulfillmentType: text("fulfillment_type").notNull().default("russian_post"),
+  /** Уровень качества для подсказки на витрине (задаётся в админке). */
+  qualityTier: text("quality_tier", { enum: ["economy", "standard", "premium"] })
+    .notNull()
+    .default("standard"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),

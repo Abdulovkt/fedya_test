@@ -14,6 +14,7 @@ import {
   promoCodes,
 } from "@/db/schema";
 import { slugify } from "@/lib/format";
+import { QUALITY_TIERS, normalizeQualityTier } from "@/lib/product-quality";
 import { FULFILLMENT_TYPES, normalizeFulfillmentType } from "@/lib/shipping";
 import { saveSettings, type SettingKey, SETTING_KEYS } from "@/lib/settings";
 import { STATUS_VALUES, getStatusMeta } from "@/lib/order-statuses";
@@ -125,6 +126,7 @@ const productSchema = z.object({
   ),
   stock: z.coerce.number().int().min(0),
   fulfillmentType: z.enum(FULFILLMENT_TYPES),
+  qualityTier: z.enum(QUALITY_TIERS),
 });
 
 export async function createProduct(formData: FormData) {
@@ -139,6 +141,7 @@ export async function createProduct(formData: FormData) {
     costRub: formData.get("costRub"),
     stock: formData.get("stock"),
     fulfillmentType: normalizeFulfillmentType(String(formData.get("fulfillmentType") ?? "")),
+    qualityTier: normalizeQualityTier(String(formData.get("qualityTier") ?? "standard")),
   });
   if (!parsed.success) return;
 
@@ -158,6 +161,7 @@ export async function createProduct(formData: FormData) {
     stock: parsed.data.stock,
     isActive,
     fulfillmentType: parsed.data.fulfillmentType,
+    qualityTier: parsed.data.qualityTier,
   });
   revalidatePath("/admin");
   revalidatePath("/admin/products");
@@ -185,6 +189,7 @@ export async function updateProduct(
     costRub: formData.get("costRub"),
     stock: formData.get("stock"),
     fulfillmentType: normalizeFulfillmentType(String(formData.get("fulfillmentType") ?? "")),
+    qualityTier: normalizeQualityTier(String(formData.get("qualityTier") ?? "standard")),
   });
   if (!parsed.success) return { error: "Проверьте правильность заполнения полей" };
 
@@ -205,6 +210,7 @@ export async function updateProduct(
       stock: parsed.data.stock,
       isActive,
       fulfillmentType: parsed.data.fulfillmentType,
+      qualityTier: parsed.data.qualityTier,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id));

@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { normalizeQualityTier } from "@/lib/product-quality";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 type Props = { params: Promise<{ id: string }> };
@@ -58,6 +59,7 @@ export default async function EditProductPage({ params }: Props) {
             isActive: product.isActive,
             imageUrl: product.imageUrl,
             fulfillmentType: normalizeFulfillmentType(product.fulfillmentType),
+            qualityTier: normalizeQualityTier(product.qualityTier),
           }}
         />
       </div>

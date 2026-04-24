@@ -5,6 +5,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, type UpdateProductState } from "@/app/actions/admin";
 import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
+import { QUALITY_TIERS, qualityTierLabel, type QualityTier } from "@/lib/product-quality";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Category = {
@@ -29,6 +30,7 @@ type Props = {
     isActive: boolean;
     imageUrl: string | null;
     fulfillmentType: FulfillmentType;
+    qualityTier: QualityTier;
   };
 };
 
@@ -221,6 +223,28 @@ export function ProductForm({ categories, mode, product }: Props) {
         </select>
         <p className="mt-1 text-xs text-brand-muted">
           Определяет, с какого «склада» идёт отгрузка и какая строка доставки добавится к заказу.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="qualityTier" className="text-sm text-brand-muted">
+          Качество товара на витрине
+        </label>
+        <select
+          id="qualityTier"
+          name="qualityTier"
+          required
+          defaultValue={product?.qualityTier ?? "standard"}
+          className="mt-1 w-full cursor-pointer rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-heading transition-colors duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/50 focus-visible:ring-offset-2"
+        >
+          {QUALITY_TIERS.map((t) => (
+            <option key={t} value={t}>
+              {qualityTierLabel(t)}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-brand-muted">
+          Подсказка для покупателя (бейдж в каталоге); не заменяет отзывы.
         </p>
       </div>
 

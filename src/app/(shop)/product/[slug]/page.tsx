@@ -7,7 +7,9 @@ import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatPrice, getStockLabel } from "@/lib/format";
 import { fulfillmentLabel, normalizeFulfillmentType } from "@/lib/shipping";
+import { ProductQualityBadge } from "@/components/shop/ProductQualityBadge";
 import { ProductReviewsBlock } from "@/components/shop/ProductReviewsBlock";
+import { normalizeQualityTier } from "@/lib/product-quality";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -80,6 +82,9 @@ export default async function ProductPage({ params }: Props) {
           <h1 className="mt-2 text-2xl font-bold text-brand-heading sm:text-3xl">
             {p.name}
           </h1>
+          <div className="mt-3">
+            <ProductQualityBadge tier={normalizeQualityTier(p.qualityTier)} />
+          </div>
           <p className="mt-4 text-2xl font-bold text-brand sm:text-3xl">
             {formatPrice(p.price)}
           </p>

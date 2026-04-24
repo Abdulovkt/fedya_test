@@ -4,6 +4,7 @@ import { deleteProduct } from "@/app/actions/admin";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
+import { qualityTierLabel } from "@/lib/product-quality";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-2">Название</th>
               <th className="px-4 py-2">Категория</th>
               <th className="px-4 py-2">Цена</th>
+              <th className="px-4 py-2">Качество</th>
               <th className="px-4 py-2 text-right">Остаток</th>
               <th className="px-4 py-2">Статус</th>
               <th className="px-4 py-2" />
@@ -51,6 +53,9 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-2 text-brand-heading">{product.name}</td>
                 <td className="px-4 py-2 text-brand-muted">{categoryName}</td>
                 <td className="px-4 py-2">{formatPrice(product.price)}</td>
+                <td className="px-4 py-2 text-brand-muted">
+                  {qualityTierLabel(product.qualityTier)}
+                </td>
                 <td className="px-4 py-2 text-right tabular-nums">
                   <span
                     className={

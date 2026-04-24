@@ -54,51 +54,57 @@ export default async function AllReviewsPage() {
       </p>
 
       <section id="delivery" className="mt-12 scroll-mt-24">
-        <h2 className="text-xl font-semibold text-brand-heading sm:text-2xl">О доставке</h2>
-        <StatsLine label="Средняя оценка доставки" stats={deliveryStats} />
-        {deliveryList.length === 0 ? (
-          <p className="mt-6 text-sm text-brand-muted">Пока нет опубликованных отзывов о доставке.</p>
-        ) : (
-          <ul className="mt-6 space-y-5">
-            {deliveryList.map((r) => (
-              <li key={r.id}>
-                <PublicReviewCard
-                  kind="delivery"
-                  rating={r.rating}
-                  text={r.text}
-                  photoUrlsJson={r.photoUrls}
-                  createdAt={r.createdAt}
-                  customerName={r.customerName}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="rounded-2xl border border-brand-teal/25 bg-brand-teal/[0.06] p-5 sm:p-8">
+          <h2 className="text-xl font-semibold text-brand-teal sm:text-2xl">О доставке</h2>
+          <p className="mt-1 text-sm text-brand-muted">О сервисе доставки</p>
+          <StatsLine label="Средняя оценка доставки" stats={deliveryStats} />
+          {deliveryList.length === 0 ? (
+            <p className="mt-6 text-sm text-brand-muted">Пока нет опубликованных отзывов о доставке.</p>
+          ) : (
+            <ul className="mt-6 space-y-5">
+              {deliveryList.map((r) => (
+                <li key={r.id}>
+                  <PublicReviewCard
+                    kind="delivery"
+                    rating={r.rating}
+                    text={r.text}
+                    photoUrlsJson={r.photoUrls}
+                    createdAt={r.createdAt}
+                    customerName={r.customerName}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
 
       <section id="products" className="mt-14 scroll-mt-24 border-t border-brand-border pt-12">
-        <h2 className="text-xl font-semibold text-brand-heading sm:text-2xl">О товарах</h2>
-        <StatsLine label="Средняя оценка товаров" stats={productStats} />
-        {productList.length === 0 ? (
-          <p className="mt-6 text-sm text-brand-muted">Пока нет опубликованных отзывов о товарах.</p>
-        ) : (
-          <ul className="mt-6 space-y-5">
-            {productList.map((r) => (
-              <li key={r.id}>
-                <PublicReviewCard
-                  kind="product"
-                  rating={r.rating}
-                  text={r.text}
-                  photoUrlsJson={r.photoUrls}
-                  createdAt={r.createdAt}
-                  customerName={r.customerName}
-                  productName={r.productName}
-                  productSlug={r.productSlug}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="rounded-2xl border border-brand-border bg-brand-surface/85 p-5 ring-1 ring-brand/5 sm:p-8">
+          <h2 className="text-xl font-semibold text-brand-heading sm:text-2xl">О товарах</h2>
+          <p className="mt-1 text-sm text-brand-muted">О купленных товарах</p>
+          <StatsLine label="Средняя оценка товаров" stats={productStats} />
+          {productList.length === 0 ? (
+            <p className="mt-6 text-sm text-brand-muted">Пока нет опубликованных отзывов о товарах.</p>
+          ) : (
+            <ul className="mt-6 space-y-5">
+              {productList.map((r) => (
+                <li key={r.id}>
+                  <PublicReviewCard
+                    kind="product"
+                    rating={r.rating}
+                    text={r.text}
+                    photoUrlsJson={r.photoUrls}
+                    createdAt={r.createdAt}
+                    customerName={r.customerName}
+                    productName={r.productName}
+                    productSlug={r.productSlug}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
     </div>
   );

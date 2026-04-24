@@ -9,6 +9,7 @@ import {
   childrenOf,
   type CategoryRecord,
 } from "@/lib/categories";
+import { normalizeQualityTier } from "@/lib/product-quality";
 import { normalizeFulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Каталог" };
@@ -104,6 +105,7 @@ export default async function CatalogPage({
       stock: products.stock,
       categoryName: categories.name,
       fulfillmentType: products.fulfillmentType,
+      qualityTier: products.qualityTier,
     })
     .from(products)
     .innerJoin(categories, eq(products.categoryId, categories.id))
@@ -152,6 +154,7 @@ export default async function CatalogPage({
               stock={p.stock}
               categoryName={p.categoryName}
               fulfillmentType={normalizeFulfillmentType(p.fulfillmentType)}
+              qualityTier={normalizeQualityTier(p.qualityTier)}
             />
           ))}
         </div>
