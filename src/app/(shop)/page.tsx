@@ -40,29 +40,38 @@ export default async function HomePage() {
     getApprovedProductReviewsSiteWide(24),
   ]);
 
-  const hasReviewPreview = deliveryPreview.length > 0 || productPreview.length > 0;
+  const mergedReviews = [
+    ...deliveryPreview.map((r) => ({ kind: "delivery" as const, ...r })),
+    ...productPreview.map((r) => ({ kind: "product" as const, ...r })),
+  ]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 24);
 
-  const deliverySlides = deliveryPreview.map((r) => ({
-    kind: "delivery" as const,
-    id: r.id,
-    rating: r.rating,
-    text: r.text,
-    photoUrlsJson: r.photoUrls,
-    createdAt: r.createdAt.toISOString(),
-    customerName: r.customerName,
-  }));
+  const hasReviewPreview = mergedReviews.length > 0;
 
-  const productSlides = productPreview.map((r) => ({
-    kind: "product" as const,
-    id: r.id,
-    rating: r.rating,
-    text: r.text,
-    photoUrlsJson: r.photoUrls,
-    createdAt: r.createdAt.toISOString(),
-    customerName: r.customerName,
-    productName: r.productName,
-    productSlug: r.productSlug,
-  }));
+  const allSlides = mergedReviews.map((r) =>
+    r.kind === "delivery"
+      ? {
+          kind: "delivery" as const,
+          id: r.id,
+          rating: r.rating,
+          text: r.text,
+          photoUrlsJson: r.photoUrls,
+          createdAt: r.createdAt.toISOString(),
+          customerName: r.customerName,
+        }
+      : {
+          kind: "product" as const,
+          id: r.id,
+          rating: r.rating,
+          text: r.text,
+          photoUrlsJson: r.photoUrls,
+          createdAt: r.createdAt.toISOString(),
+          customerName: r.customerName,
+          productName: r.productName,
+          productSlug: r.productSlug,
+        },
+  );
 
   return (
     <div>
@@ -138,7 +147,13 @@ export default async function HomePage() {
       <section className="order-5 border-t border-brand-border bg-brand-elevated px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-2xl font-bold text-brand-heading">Отзывы</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-brand-heading">Отзывы</h2>
+              <p className="mt-1 max-w-2xl text-sm text-brand-muted">
+                О доставке и товарах. Тип отзыва указан на карточке; о доставке — бирюзовый
+                акцент, о товаре — нейтральный.
+              </p>
+            </div>
             <Link
               href="/reviews"
               className="text-sm font-medium text-brand hover:text-brand-teal hover:underline"
@@ -151,66 +166,38 @@ export default async function HomePage() {
               Пока нет опубликованных отзывов. Они появятся здесь после покупки и модерации.
             </p>
           ) : (
-            <div className="mt-8 space-y-10">
-              {deliveryPreview.length > 0 && (
-                <div className="rounded-2xl border border-brand-teal/25 bg-brand-teal/[0.06] p-5 sm:p-6">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-teal">
-                    Доставка
-                  </h3>
-                  <p className="mt-1 text-sm text-brand-muted">О сервисе доставки</p>
-                  {deliveryPreview.length > 5 ? (
-                    <div className="mt-6">
-                      <ReviewPreviewRotator
-                        items={deliverySlides}
-                        ariaLabel="Отзывы о доставке на главной"
+            <div className="mt-8 rounded-2xl border border-brand-border bg-brand-surface/70 p-5 ring-1 ring-slate-900/5 sm:p-6">
+              {mergedReviews.length > 5 ? (
+                <ReviewPreviewRotator
+                  items={allSlides}
+                  ariaLabel="Отзывы покупателей на главной"
+                />
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {mergedReviews.map((r) =>
+                    r.kind === "delivery" ? (
+                      <PublicReviewCard
+                        key={`d-${r.id}`}
+                        kind="delivery"
+                        rating={r.rating}
+                        text={r.text}
+                        photoUrlsJson={r.photoUrls}
+                        createdAt={r.createdAt}
+                        customerName={r.customerName}
                       />
-                    </div>
-                  ) : (
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                      {deliveryPreview.map((r) => (
-                        <PublicReviewCard
-                          key={r.id}
-                          kind="delivery"
-                          rating={r.rating}
-                          text={r.text}
-                          photoUrlsJson={r.photoUrls}
-                          createdAt={r.createdAt}
-                          customerName={r.customerName}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {productPreview.length > 0 && (
-                <div className="rounded-2xl border border-brand-border bg-brand-surface/85 p-5 ring-1 ring-brand/5 sm:p-6">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-heading">
-                    Товары
-                  </h3>
-                  <p className="mt-1 text-sm text-brand-muted">О купленных товарах</p>
-                  {productPreview.length > 5 ? (
-                    <div className="mt-6">
-                      <ReviewPreviewRotator
-                        items={productSlides}
-                        ariaLabel="Отзывы о товарах на главной"
+                    ) : (
+                      <PublicReviewCard
+                        key={`p-${r.id}`}
+                        kind="product"
+                        rating={r.rating}
+                        text={r.text}
+                        photoUrlsJson={r.photoUrls}
+                        createdAt={r.createdAt}
+                        customerName={r.customerName}
+                        productName={r.productName}
+                        productSlug={r.productSlug}
                       />
-                    </div>
-                  ) : (
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                      {productPreview.map((r) => (
-                        <PublicReviewCard
-                          key={r.id}
-                          kind="product"
-                          rating={r.rating}
-                          text={r.text}
-                          photoUrlsJson={r.photoUrls}
-                          createdAt={r.createdAt}
-                          customerName={r.customerName}
-                          productName={r.productName}
-                          productSlug={r.productSlug}
-                        />
-                      ))}
-                    </div>
+                    ),
                   )}
                 </div>
               )}
