@@ -25,22 +25,28 @@ export function Footer() {
             <p className="text-sm font-semibold tracking-tight text-slate-200">
               Магазин
             </p>
-            <ul className="mt-2 space-y-1.5 text-sm text-slate-400">
+            <ul className="mt-3 flex list-none flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400 sm:gap-x-7">
               <li>
                 <Link
                   href="/catalog"
-                  className="transition-colors hover:text-brand-teal"
+                  className="cursor-pointer whitespace-nowrap transition-colors duration-200 hover:text-brand-teal focus-visible:rounded-sm focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/45 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   Каталог
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className="transition-colors hover:text-brand-teal">
+                <Link
+                  href="/cart"
+                  className="cursor-pointer whitespace-nowrap transition-colors duration-200 hover:text-brand-teal focus-visible:rounded-sm focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/45 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                >
                   Корзина
                 </Link>
               </li>
               <li>
-                <Link href="/reviews" className="transition-colors hover:text-brand-teal">
+                <Link
+                  href="/reviews"
+                  className="cursor-pointer whitespace-nowrap transition-colors duration-200 hover:text-brand-teal focus-visible:rounded-sm focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/45 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                >
                   Отзывы
                 </Link>
               </li>
