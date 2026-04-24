@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-slate-800 bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2">
           <div>
             <Link
               href="/"
@@ -42,18 +42,6 @@ export function Footer() {
               <li>
                 <Link href="/reviews" className="transition-colors hover:text-brand-teal">
                   Отзывы
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-sm font-semibold tracking-tight text-slate-200">
-              Администрирование
-            </p>
-            <ul className="mt-2 space-y-1.5 text-sm text-slate-400">
-              <li>
-                <Link href="/admin" className="transition-colors hover:text-brand-teal">
-                  Панель администратора
                 </Link>
               </li>
             </ul>
