@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { markChatAsRead } from "@/app/actions/admin";
 import { MessageText } from "@/components/chat/MessageText";
@@ -18,17 +19,23 @@ export function AdminChatBox({
   orderId: number;
   customerName: string;
 }) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const didRefreshNav = useRef(false);
 
   async function fetchMessages() {
     try {
       const res = await fetch(`/api/chat/${orderId}`, { cache: "no-store" });
       if (res.ok) {
         setMessages((await res.json()) as Message[]);
-        markChatAsRead(orderId).catch(() => {});
+        await markChatAsRead(orderId).catch(() => {});
+        if (!didRefreshNav.current) {
+          didRefreshNav.current = true;
+          router.refresh();
+        }
       }
     } catch (error) {
       console.error("Failed to fetch admin chat messages", error);

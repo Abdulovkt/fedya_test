@@ -107,6 +107,7 @@ export async function addToCart(formData: FormData) {
   revalidatePath("/catalog");
   revalidatePath("/cart");
   revalidatePath("/checkout");
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
 }
 
@@ -186,6 +187,7 @@ export async function updateCartItemQuantity(formData: FormData) {
   await syncCartPromoCode(cartId);
   revalidatePath("/cart");
   revalidatePath("/checkout");
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
 }
 
@@ -221,6 +223,7 @@ export async function removeCartItem(formData: FormData) {
   await syncCartPromoCode(cartId);
   revalidatePath("/cart");
   revalidatePath("/checkout");
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
 }
 

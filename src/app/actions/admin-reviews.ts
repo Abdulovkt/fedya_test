@@ -72,6 +72,7 @@ export async function moderateCustomerReview(
       .where(eq(customerReviews.id, row.id));
   }
 
+  revalidatePath("/admin");
   revalidatePath("/admin/reviews");
   revalidatePath("/reviews");
   revalidatePath("/catalog");

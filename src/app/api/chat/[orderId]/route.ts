@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { eq, asc } from "drizzle-orm";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
@@ -152,6 +153,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     .insert(chatMessages)
     .values({ orderId: oid, sender: access.sender, text })
     .returning();
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/chats");
+  revalidatePath(`/admin/chats/${oid}`);
 
   // Notify customer by email when admin replies
   if (access.sender === "admin") {

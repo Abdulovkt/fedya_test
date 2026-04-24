@@ -270,6 +270,7 @@ export async function placeOrder(
   revalidatePath("/cart");
   revalidatePath("/checkout");
   revalidatePath("/catalog");
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/admin/orders");
 

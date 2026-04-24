@@ -159,6 +159,7 @@ export async function createProduct(formData: FormData) {
     isActive,
     fulfillmentType: parsed.data.fulfillmentType,
   });
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/admin/reports/profit");
   revalidatePath("/catalog");
@@ -208,6 +209,7 @@ export async function updateProduct(
     })
     .where(eq(products.id, id));
 
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/admin/reports/profit");
   revalidatePath("/catalog");
@@ -221,6 +223,7 @@ export async function deleteProduct(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) return;
   await db.delete(products).where(eq(products.id, id));
+  revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/catalog");
 }
@@ -469,6 +472,7 @@ export async function updateOrderStatus(formData: FormData) {
     });
   }
 
+  revalidatePath("/admin");
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath("/admin/chats");

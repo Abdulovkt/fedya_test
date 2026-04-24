@@ -116,6 +116,7 @@ export async function submitDeliveryReview(
 
   revalidatePath("/reviews");
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/admin/reviews");
   return { ok: true };
 }
@@ -214,6 +215,7 @@ export async function submitProductReview(
   revalidatePath(`/product/${productRow.slug}`);
   revalidatePath("/");
   revalidatePath("/reviews");
+  revalidatePath("/admin");
   revalidatePath("/admin/reviews");
   return { ok: true };
 }
