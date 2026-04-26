@@ -1,4 +1,5 @@
 import { asc, isNull } from "drizzle-orm";
+import Link from "next/link";
 import { createCategory, deleteCategory } from "@/app/actions/admin";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
@@ -22,9 +23,15 @@ export default async function AdminCategoriesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-brand-heading">Категории</h1>
-      <p className="mt-1 max-w-lg text-sm text-brand-muted">
+      <p className="mt-1 max-w-2xl text-sm text-brand-muted">
         Подкатегория: в форме ниже в поле «Родитель» выберите раздел верхнего уровня (например «Протеин»), задайте
         название «Сывороточный» и slug. Вложенность одна: подкатегория не может быть родителем.
+      </p>
+      <p className="mt-3 max-w-2xl text-sm text-brand-muted">
+        <span className="font-medium text-brand-heading">Порядок</span> — число, которое задаёт, в каком порядке
+        на сайте идут категории в каталоге, в шапке и в выборе категории у товара. Он <strong>не</strong> зависит от
+        букв в названии: сначала сравнивается это число, при равенстве — алфавит. У корневых разделов — свой порядок
+        среди «верхнего уровня»; у подкатегорий — только среди соседей (у кого один родитель).
       </p>
       <form
         action={createCategory}
@@ -73,15 +80,22 @@ export default async function AdminCategoriesPage() {
         </div>
         <div>
           <label htmlFor="sortOrder" className="text-xs text-brand-muted">
-            Порядок
+            Порядок на витрине
           </label>
           <input
             id="sortOrder"
             name="sortOrder"
             type="number"
+            min={0}
             defaultValue={0}
-            className="mt-1 w-full rounded border border-brand-border bg-brand-surface px-2 py-1.5 text-sm text-brand-heading"
+            className="mt-1 w-full max-w-[12rem] rounded border border-brand-border bg-brand-surface px-2 py-1.5 text-sm text-brand-heading"
+            aria-describedby="sortOrder-hint"
           />
+          <p id="sortOrder-hint" className="mt-1.5 text-xs leading-relaxed text-brand-muted">
+            Чем <strong>меньше</strong> число, тем <strong>раньше</strong> в списке идёт категория. Удобно задать, например,{" "}
+            <span className="whitespace-nowrap">0, 10, 20</span> — между ними при необходимости можно добавить
+            новый раздел. Укажите при создании; для уже созданной категории значение видно в таблице ниже.
+          </p>
         </div>
         <button
           type="submit"
@@ -98,7 +112,12 @@ export default async function AdminCategoriesPage() {
               <th className="px-4 py-2">Название</th>
               <th className="px-4 py-2">Родитель</th>
               <th className="px-4 py-2">Slug</th>
-              <th className="px-4 py-2">Порядок</th>
+              <th className="px-4 py-2">
+                <span className="block">Порядок</span>
+                <span className="mt-0.5 block text-[10px] font-normal normal-case text-brand-muted/90">
+                  на витрине
+                </span>
+              </th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -123,7 +142,13 @@ export default async function AdminCategoriesPage() {
                   <td className="px-4 py-2 text-brand-muted">{c.slug}</td>
                   <td className="px-4 py-2">{c.sortOrder}</td>
                   <td className="px-4 py-2 text-right">
-                    <form action={deleteCategory}>
+                    <Link
+                      href={`/admin/categories/${c.id}/edit`}
+                      className="mr-3 text-xs text-brand hover:underline"
+                    >
+                      Изменить
+                    </Link>
+                    <form action={deleteCategory} className="inline">
                       <input type="hidden" name="id" value={c.id} />
                       <button
                         type="submit"

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { count, eq } from "drizzle-orm";
+import { count, eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -89,6 +89,108 @@ export async function createCategory(formData: FormData) {
   });
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  revalidatePath("/catalog");
+}
+
+const categoryUpdateSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  name: z.string().min(1),
+  slug: z.string().min(1).optional(),
+  sortOrder: z.coerce.number().int().default(0),
+  parentIdRaw: z.string().optional(),
+});
+
+export type UpdateCategoryState = { ok?: boolean; error?: string } | null;
+
+export async function updateCategory(
+  _prev: UpdateCategoryState,
+  formData: FormData,
+): Promise<UpdateCategoryState> {
+  await requireAdmin();
+  const raw = {
+    id: formData.get("id"),
+    name: String(formData.get("name") ?? ""),
+    slug: formData.get("slug")?.toString(),
+    sortOrder: formData.get("sortOrder"),
+    parentIdRaw: formData.get("parentId")?.toString() ?? "",
+  };
+  const parsed = categoryUpdateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: "Проверьте правильность полей" };
+  }
+
+  const [row] = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.id, parsed.data.id))
+    .limit(1);
+  if (!row) {
+    return { error: "Категория не найдена" };
+  }
+
+  const slug = parsed.data.slug?.trim() || slugify(parsed.data.name);
+
+  const [dupSlug] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(and(eq(categories.slug, slug), ne(categories.id, parsed.data.id)))
+    .limit(1);
+  if (dupSlug) {
+    return { error: "Категория с таким slug уже существует" };
+  }
+
+  const [childRow] = await db
+    .select({ n: count() })
+    .from(categories)
+    .where(eq(categories.parentId, parsed.data.id));
+  const hasSubcategories = childRow && Number(childRow.n) > 0;
+
+  const parentIdParsed = (() => {
+    const t = parsed.data.parentIdRaw?.trim() ?? "";
+    if (!t || t === "0") return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
+  let parentId: number | null = null;
+  if (hasSubcategories) {
+    parentId = null;
+  } else if (parentIdParsed != null) {
+    const [parent] = await db
+      .select({ id: categories.id, parentId: categories.parentId })
+      .from(categories)
+      .where(eq(categories.id, parentIdParsed))
+      .limit(1);
+    if (!parent || parent.parentId != null) {
+      return { error: "Некорректный родитель: выберите раздел верхнего уровня" };
+    }
+    if (parent.id === parsed.data.id) {
+      return { error: "Категория не может быть родителем самой себе" };
+    }
+    parentId = parent.id;
+  }
+
+  const oldSlug = row.slug;
+
+  await db
+    .update(categories)
+    .set({
+      name: parsed.data.name.trim(),
+      slug,
+      sortOrder: parsed.data.sortOrder,
+      parentId,
+      updatedAt: new Date(),
+    })
+    .where(eq(categories.id, parsed.data.id));
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/catalog");
+  revalidatePath(`/category/${oldSlug}`);
+  if (oldSlug !== slug) {
+    revalidatePath(`/category/${slug}`);
+  }
+  return { ok: true };
 }
 
 export async function deleteCategory(formData: FormData) {
