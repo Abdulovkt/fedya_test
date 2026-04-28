@@ -1,0 +1,35 @@
+# Пример для Debian: скопируйте в /etc/nginx/sites-available/fedya
+# и отредактируйте: замените YOUR_SERVER_IP на публичный IP VPS.
+# Затем: ln -s ... sites-enabled, nginx -t, systemctl reload nginx
+#
+# Next в next.config: experimental.serverActions.bodySizeLimit 6mb для multipart;
+# Nginx должен пропускать тело не ниже этого (8m ниже с запасом).
+#
+# fedya: Next.js 16, слушает 127.0.0.1:3000 (PM2: npm start).
+# Загрузка картинок в коде — до 4 МБ; ниже 8 МБ с запасом.
+
+server {
+    listen 80;
+    listen [::]:80;
+    # Явно по IP (без своего домена)
+    server_name YOUR_SERVER_IP _;
+
+    # Размер тела запроса (form uploads / несколько фото) — в проекте лимит файлов 4MB
+    client_max_body_size 8m;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+
+        # long polling / возможные keep-alive
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+}
