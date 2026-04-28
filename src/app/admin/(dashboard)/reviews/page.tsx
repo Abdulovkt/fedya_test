@@ -5,6 +5,7 @@ import { ReviewsModeration } from "@/components/admin/ReviewsModeration";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { inArray } from "drizzle-orm";
+import { isPublicUploadPath } from "@/lib/public-assets";
 import { parseReviewPhotoUrls } from "@/lib/review-display";
 
 export const metadata = { title: "Отзывы" };
@@ -80,7 +81,14 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
                         rel="noopener noreferrer"
                         className="relative h-16 w-16 overflow-hidden rounded border border-brand-border"
                       >
-                        <Image src={src} alt="" fill className="object-cover" sizes="64px" />
+                        <Image
+                          src={src}
+                          alt=""
+                          fill
+                          unoptimized={isPublicUploadPath(src)}
+                          className="object-cover"
+                          sizes="64px"
+                        />
                       </a>
                     ))}
                   </div>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { displayReviewCustomerName, parseReviewPhotoUrls } from "@/lib/review-display";
+import { isPublicUploadPath } from "@/lib/public-assets";
 
 function starsRow(n: number) {
   return (
@@ -137,6 +138,7 @@ export function PublicReviewCard({
                 src={src}
                 alt="Фото из отзыва"
                 fill
+                unoptimized={isPublicUploadPath(src)}
                 className="object-cover"
                 sizes="80px"
               />

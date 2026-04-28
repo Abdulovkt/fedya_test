@@ -4,6 +4,7 @@ import {
   getProductAverageRating,
 } from "@/lib/reviews-public";
 import { displayReviewCustomerName, parseReviewPhotoUrls } from "@/lib/review-display";
+import { isPublicUploadPath } from "@/lib/public-assets";
 
 function stars(rating: number) {
   return (
@@ -90,6 +91,7 @@ export async function ProductReviewsBlock({ productId }: Props) {
                         src={src}
                         alt=""
                         fill
+                        unoptimized={isPublicUploadPath(src)}
                         className="object-cover"
                         sizes="80px"
                       />

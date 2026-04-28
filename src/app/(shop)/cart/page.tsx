@@ -7,6 +7,7 @@ import { CartItemControls } from "@/components/shop/CartItemControls";
 import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { PromoCodeForm } from "@/components/shop/PromoCodeForm";
 import { getPromoValidationError } from "@/lib/promocodes";
+import { isPublicUploadPath } from "@/lib/public-assets";
 import { getSettings, getDeliveryFeesKopecksFromSettings } from "@/lib/settings";
 import {
   fulfillmentLabel,
@@ -90,6 +91,7 @@ export default async function CartPage() {
                                 src={line.imageUrl}
                                 alt={line.name}
                                 fill
+                                unoptimized={isPublicUploadPath(line.imageUrl)}
                                 className="object-cover"
                                 sizes="80px"
                               />

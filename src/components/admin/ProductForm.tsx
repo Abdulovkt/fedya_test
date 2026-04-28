@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, type UpdateProductState } from "@/app/actions/admin";
 import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
 import { QUALITY_TIERS, qualityTierLabel, type QualityTier } from "@/lib/product-quality";
+import { isPublicUploadPath } from "@/lib/public-assets";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Category = {
@@ -366,7 +367,7 @@ export function ProductForm({ categories, mode, product }: Props) {
                 src={currentImage}
                 alt="Превью"
                 fill
-                unoptimized={preview !== null}
+                unoptimized={preview !== null || isPublicUploadPath(currentImage)}
                 className="object-cover"
               />
             ) : (

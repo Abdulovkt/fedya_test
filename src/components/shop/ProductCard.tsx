@@ -4,6 +4,7 @@ import { addToCart } from "@/app/actions/cart";
 import { ProductQualityBadge } from "@/components/shop/ProductQualityBadge";
 import { formatPrice, getStockLabel } from "@/lib/format";
 import type { QualityTier } from "@/lib/product-quality";
+import { isPublicUploadPath } from "@/lib/public-assets";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 type Props = {
@@ -44,6 +45,7 @@ export function ProductCard({
               src={imageUrl}
               alt={name}
               fill
+              unoptimized={isPublicUploadPath(imageUrl)}
               className="object-cover transition-transform duration-300 will-change-transform motion-reduce:transition-none motion-reduce:group-hover:scale-100 group-hover:scale-[1.03]"
               sizes="(max-width: 768px) 100vw, 280px"
             />

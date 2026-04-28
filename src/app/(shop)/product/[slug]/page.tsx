@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatPrice, getStockLabel } from "@/lib/format";
 import { fulfillmentLabel, normalizeFulfillmentType } from "@/lib/shipping";
+import { isPublicUploadPath } from "@/lib/public-assets";
 import { ProductQualityBadge } from "@/components/shop/ProductQualityBadge";
 import { ProductReviewsBlock } from "@/components/shop/ProductReviewsBlock";
 import { normalizeQualityTier } from "@/lib/product-quality";
@@ -65,6 +66,7 @@ export default async function ProductPage({ params }: Props) {
               src={p.imageUrl}
               alt={p.name}
               fill
+              unoptimized={isPublicUploadPath(p.imageUrl)}
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
