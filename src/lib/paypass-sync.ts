@@ -142,9 +142,6 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
       : null;
 
   if (!lookup) {
-    if (order.paymentMethod === "bank_transfer") {
-      return { orderId, updated: false, skipped: true, reason: "no_paypass_for_bank_transfer" };
-    }
     if (order.paymentStatus === "unpaid") {
       const displayOrderNumber = order.publicOrderNumber ?? `#${order.id}`;
       const clientRequestId = buildPublicPayPassClientRequestId(
