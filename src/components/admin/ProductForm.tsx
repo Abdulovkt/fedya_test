@@ -348,7 +348,7 @@ export function ProductForm({ categories, mode, product }: Props) {
           id="image"
           name="image"
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept="image/*"
           onChange={handleFileChange}
           className="sr-only"
         />
