@@ -10,12 +10,21 @@ export function CheckoutForm({
   promoCode,
   needsCdekPickup = false,
   hasRussianPost = false,
+  paymentOptions,
+  paymentsDisabled = false,
 }: {
   promoCode?: string | null;
   /** Показать обязательное поле «ПВЗ СДЭК» */
   needsCdekPickup?: boolean;
   /** В корзине есть товары с отгрузкой Почтой России — адрес в формате одной строки, обязателен */
   hasRussianPost?: boolean;
+  paymentOptions: {
+    showPaypass: boolean;
+    showBank: boolean;
+    defaultMethod: "paypass" | "bank_transfer";
+  };
+  /** Ни один способ оплаты не настроен в админке */
+  paymentsDisabled?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     placeOrder,
@@ -185,10 +194,56 @@ export function CheckoutForm({
           ) : null}
         </div>
       ) : null}
+      {paymentOptions.showPaypass && paymentOptions.showBank ? (
+        <fieldset className="space-y-2 rounded-xl border border-brand-border bg-brand-surface/40 p-4">
+          <legend className="px-1 text-sm font-medium text-brand-heading">Способ оплаты</legend>
+          <p className="text-xs text-brand-muted">
+            Онлайн — ссылка на оплату в Telegram. Перевод — реквизиты карты на следующей странице,
+            подтверждение вручную после поступления средств.
+          </p>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition-colors duration-200 has-[:checked]:border-brand-teal/50 has-[:checked]:bg-brand-teal/5 hover:bg-brand-elevated/60">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="paypass"
+              defaultChecked={paymentOptions.defaultMethod === "paypass"}
+              className="mt-1 h-4 w-4 border-brand-border text-brand-teal focus:ring-brand-teal/40"
+            />
+            <span>
+              <span className="block text-sm font-medium text-brand-heading">Онлайн (Telegram)</span>
+              <span className="mt-0.5 block text-xs text-brand-muted">PayPass, оплата через бота</span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition-colors duration-200 has-[:checked]:border-brand-teal/50 has-[:checked]:bg-brand-teal/5 hover:bg-brand-elevated/60">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="bank_transfer"
+              defaultChecked={paymentOptions.defaultMethod === "bank_transfer"}
+              className="mt-1 h-4 w-4 border-brand-border text-brand-teal focus:ring-brand-teal/40"
+            />
+            <span>
+              <span className="block text-sm font-medium text-brand-heading">Перевод на карту</span>
+              <span className="mt-0.5 block text-xs text-brand-muted">
+                Реквизиты и сумма — после оформления; чек можно отправить в чат заказа
+              </span>
+            </span>
+          </label>
+        </fieldset>
+      ) : paymentOptions.showBank ? (
+        <input type="hidden" name="paymentMethod" value="bank_transfer" />
+      ) : (
+        <input type="hidden" name="paymentMethod" value="paypass" />
+      )}
       <button
         type="submit"
-        disabled={pending}
-        className="w-full rounded-xl bg-brand-teal py-3 font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-60"
+        disabled={pending || paymentsDisabled}
+        title={
+          paymentsDisabled
+            ? "Настройте способы оплаты в админке"
+            : undefined
+        }
+        className="w-full rounded-xl bg-brand-teal py-3 font-semibold text-white transition-colors duration-200 hover:bg-brand-teal/90 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {pending ? "Отправка…" : "Подтвердить заказ"}
       </button>

@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
 import { getPricingFromStoredOrder } from "@/lib/pricing";
+import { AdminMarkBankTransferPaidButton } from "@/components/admin/AdminMarkBankTransferPaidButton";
 import { AdminSyncPaymentButton } from "@/components/admin/AdminSyncPaymentButton";
 import { OrderStatusChanger } from "@/components/admin/OrderStatusChanger";
 import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
@@ -26,13 +27,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   if (!order) notFound();
 
   if (order.paymentStatus === "pending" || order.paymentStatus === "unpaid") {
-    await syncOrderPaymentStatusById(oid);
-    [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.id, oid))
-      .limit(1);
-    if (!order) notFound();
+    if (order.paymentMethod === "paypass") {
+      await syncOrderPaymentStatusById(oid);
+      [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, oid))
+        .limit(1);
+      if (!order) notFound();
+    }
   }
 
   const items = await db
@@ -98,6 +101,12 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-brand-muted">Оплата</h2>
+              <p className="mt-1 text-xs text-brand-muted">
+                Способ:{" "}
+                {order.paymentMethod === "bank_transfer"
+                  ? "перевод на карту"
+                  : "PayPass (Telegram)"}
+              </p>
               <p
                 className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentMeta.color}`}
               >
@@ -120,6 +129,11 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <AdminMarkBankTransferPaidButton
+                orderId={order.id}
+                paymentMethod={order.paymentMethod}
+                paymentStatus={order.paymentStatus}
+              />
               {order.paypassTelegramLink ? (
                 <a
                   href={order.paypassTelegramLink}
@@ -130,7 +144,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                   Открыть ссылку оплаты
                 </a>
               ) : null}
-              <AdminSyncPaymentButton orderId={order.id} />
+              {order.paymentMethod === "paypass" ? (
+                <AdminSyncPaymentButton orderId={order.id} />
+              ) : null}
             </div>
           </div>
         </div>

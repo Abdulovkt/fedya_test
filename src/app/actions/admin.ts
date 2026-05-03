@@ -29,7 +29,7 @@ import {
   normalizePromoCode,
   type PromoCodeRecord,
 } from "@/lib/promocodes";
-import { syncOrderPaymentStatusById } from "@/lib/paypass-sync";
+import { emailCustomerProcessingAfterPayment, syncOrderPaymentStatusById } from "@/lib/paypass-sync";
 import { getDisplayOrderNumber } from "@/lib/order-number";
 import { saveUploadedImage } from "@/lib/uploads";
 
@@ -622,4 +622,60 @@ export async function syncOrderPaymentStatusForOrder(orderId: number) {
 
   await syncOrderPaymentStatusById(orderId);
   revalidateOrderPaymentViews(orderId);
+}
+
+export async function markBankTransferPaid(orderId: number) {
+  await requireAdmin();
+  if (!Number.isFinite(orderId)) return;
+
+  const [order] = await db
+    .select({
+      id: orders.id,
+      status: orders.status,
+      paymentStatus: orders.paymentStatus,
+      paymentMethod: orders.paymentMethod,
+      totalAmount: orders.totalAmount,
+      email: orders.email,
+      customerName: orders.customerName,
+      chatToken: orders.chatToken,
+      publicOrderNumber: orders.publicOrderNumber,
+    })
+    .from(orders)
+    .where(eq(orders.id, orderId))
+    .limit(1);
+
+  if (!order || order.paymentMethod !== "bank_transfer") return;
+  if (order.paymentStatus === "paid") return;
+
+  const now = new Date();
+  const nextStatus = order.status === "new" ? "processing" : order.status;
+
+  await db
+    .update(orders)
+    .set({
+      paymentStatus: "paid",
+      paidAmount: order.totalAmount,
+      paidAt: now,
+      paymentFailureReason: null,
+      status: nextStatus,
+      updatedAt: now,
+    })
+    .where(eq(orders.id, orderId));
+
+  if (order.status === "new" && nextStatus === "processing" && order.chatToken) {
+    emailCustomerProcessingAfterPayment({
+      id: order.id,
+      email: order.email,
+      customerName: order.customerName,
+      chatToken: order.chatToken,
+      publicOrderNumber: order.publicOrderNumber,
+    });
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/chats");
+  revalidatePath(`/admin/chats/${orderId}`);
+  revalidatePath("/checkout/success");
 }

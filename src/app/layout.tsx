@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
-import { auth } from "@/auth";
-import { Providers } from "./providers";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -34,13 +32,11 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   return (
     <html
       lang="ru"
@@ -51,7 +47,7 @@ export default async function RootLayout({
         className="flex min-h-full flex-col bg-brand-bg text-brand-heading antialiased"
         suppressHydrationWarning
       >
-        <Providers session={session}>{children}</Providers>
+        {children}
       </body>
     </html>
   );

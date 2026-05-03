@@ -3,19 +3,15 @@
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 
-export function Providers({
-  children,
+export function ShopSessionProvider({
   session,
+  children,
 }: {
-  children: React.ReactNode;
   session: Session | null;
+  children: React.ReactNode;
 }) {
   return (
-    <SessionProvider
-      session={session}
-      basePath="/api/auth"
-      refetchOnWindowFocus={false}
-    >
+    <SessionProvider session={session} basePath="/api/auth" refetchOnWindowFocus={false}>
       {children}
     </SessionProvider>
   );

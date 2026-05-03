@@ -73,6 +73,30 @@ export function SettingsForm({ current }: { current: EmailSettings }) {
         />
       </section>
 
+      {/* Перевод на карту */}
+      <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-brand-heading">Оплата переводом на карту</h2>
+        <p className="text-xs text-brand-muted/80">
+          Если заполнить оба поля, покупатель сможет выбрать этот способ на странице оформления. Сумму
+          он увидит после заказа; подтверждение оплаты — кнопкой в карточке заказа в админке. Чек можно
+          приложить в чате заказа (скрепка у поля сообщения).
+        </p>
+        <Field
+          name="bank_transfer_recipient_name"
+          label="Имя получателя (как на карте)"
+          hint="ФИО держателя карты"
+          defaultValue={current.bank_transfer_recipient_name}
+          placeholder="Иванов Иван Иванович"
+        />
+        <Field
+          name="bank_transfer_card_number"
+          label="Номер карты"
+          hint="Можно с пробелами — на витрине отобразится как введено"
+          defaultValue={current.bank_transfer_card_number}
+          placeholder="0000 0000 0000 0000"
+        />
+      </section>
+
       {/* PayPass */}
       <section className="rounded-xl border border-brand-border bg-brand-surface/40 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-brand-heading">PayPass</h2>

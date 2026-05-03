@@ -21,6 +21,7 @@ export async function refreshOrderPaymentSync(orderRef: string, token: string) {
     .select({
       chatToken: orders.chatToken,
       paymentStatus: orders.paymentStatus,
+      paymentMethod: orders.paymentMethod,
     })
     .from(orders)
     .where(eq(orders.id, identity.id))
@@ -28,6 +29,10 @@ export async function refreshOrderPaymentSync(orderRef: string, token: string) {
 
   if (!order || order.chatToken !== token) {
     return { ok: false as const, reason: "invalid_token" };
+  }
+
+  if (order.paymentMethod === "bank_transfer") {
+    return { ok: true as const, final: true };
   }
 
   if (order.paymentStatus === "paid" || order.paymentStatus === "failed") {

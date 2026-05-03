@@ -39,6 +39,7 @@ export async function sendOrderConfirmationEmail({
   orderNumber,
   orderRef,
   chatToken,
+  paymentMethod = "paypass",
 }: {
   to: string;
   customerName: string;
@@ -46,6 +47,7 @@ export async function sendOrderConfirmationEmail({
   orderNumber: string;
   orderRef?: string;
   chatToken: string;
+  paymentMethod?: "paypass" | "bank_transfer";
 }) {
   const transporter = await getTransporter();
   if (!transporter) return;
@@ -53,6 +55,12 @@ export async function sendOrderConfirmationEmail({
   const siteUrl = await getSiteUrl();
   const from = await getFrom();
   const chatUrl = `${siteUrl}/chat/${orderRef ?? String(orderId)}?token=${chatToken}`;
+  const transferHint =
+    paymentMethod === "bank_transfer"
+      ? `<p style="margin-top:16px;line-height:1.5">Вы выбрали оплату переводом на карту. <strong>Сумму и реквизиты</strong> смотрите на странице после оформления заказа. После перевода откройте чат по ссылке ниже и при необходимости приложите скриншот или PDF чека (кнопка со скрепкой).</p>`
+      : `<p style="margin-top:16px;line-height:1.5">
+          Как оплатить и перейти к оплате, вы уже видели на странице после оформления. Это письмо — напоминание о номере заказа; мы специально не дублируем здесь ссылки на оплату, чтобы не путать вас, если вы откроете письмо позже.
+        </p>`;
 
   await transporter.sendMail({
     from,
@@ -62,9 +70,7 @@ export async function sendOrderConfirmationEmail({
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1d2a38">
         <h2 style="color:#e02c5c">Спасибо, ${customerName}!</h2>
         <p>Заказ <strong>${orderNumber}</strong> создан и ожидает оплаты. Поступление денег пока не подтверждено — после оплаты мы продолжим обработку заказа.</p>
-        <p style="margin-top:16px;line-height:1.5">
-          Как оплатить и перейти к оплате, вы уже видели на странице после оформления. Это письмо — напоминание о номере заказа; мы специально не дублируем здесь ссылки на оплату, чтобы не путать вас, если вы откроете письмо позже.
-        </p>
+        ${transferHint}
         <p style="margin-top:16px">Если нужна помощь — напишите нам в чат на сайте:</p>
         <a href="${chatUrl}"
            style="display:inline-block;margin-top:12px;padding:12px 24px;background:#e02c5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">

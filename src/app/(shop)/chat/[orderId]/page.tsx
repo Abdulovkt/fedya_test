@@ -27,6 +27,8 @@ export default async function CustomerChatPage({ params, searchParams }: Props) 
       publicOrderNumber: orders.publicOrderNumber,
       customerName: orders.customerName,
       chatToken: orders.chatToken,
+      paymentMethod: orders.paymentMethod,
+      paymentStatus: orders.paymentStatus,
     })
     .from(orders)
     .where(eq(orders.id, oid))
@@ -45,6 +47,11 @@ export default async function CustomerChatPage({ params, searchParams }: Props) 
           orderId={order.id}
           orderNumber={getDisplayOrderNumber(order)}
           token={token}
+          suggestPaymentReceipt={
+            order.paymentMethod === "bank_transfer" &&
+            order.paymentStatus !== "paid" &&
+            order.paymentStatus !== "failed"
+          }
         />
       </div>
     </div>

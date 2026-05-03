@@ -141,6 +141,10 @@ export const orders = sqliteTable("orders", {
   paymentStatus: text("payment_status", {
     enum: ["unpaid", "pending", "paid", "failed"],
   }).notNull().default("unpaid"),
+  /** Онлайн PayPass или перевод на карту (рук. подтверждение). */
+  paymentMethod: text("payment_method", { enum: ["paypass", "bank_transfer"] })
+    .notNull()
+    .default("paypass"),
   paymentFailureReason: text("payment_failure_reason"),
   paypassPublicId: text("paypass_public_id"),
   paypassClientRequestId: text("paypass_client_request_id"),

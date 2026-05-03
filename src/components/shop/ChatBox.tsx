@@ -14,10 +14,13 @@ export function ChatBox({
   orderId,
   orderNumber,
   token,
+  suggestPaymentReceipt = false,
 }: {
   orderId: number;
   orderNumber: string;
   token: string;
+  /** Показать подсказку про чек перевода (заказ с оплатой переводом, ожидает оплату). */
+  suggestPaymentReceipt?: boolean;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
@@ -92,10 +95,17 @@ export function ChatBox({
       {/* Messages */}
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f0f2f5] px-4 py-5 sm:px-6 sm:py-6">
         {messages.length === 0 && (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <span className="rounded-full bg-black/8 px-4 py-1.5 text-sm text-slate-600">
               Задайте любой вопрос по вашему заказу
             </span>
+            {suggestPaymentReceipt ? (
+              <span className="max-w-md rounded-xl border border-brand-border/60 bg-white px-4 py-2 text-center text-xs text-brand-muted shadow-sm">
+                Оплатили переводом? Прикрепите скриншот или PDF чека кнопкой{" "}
+                <span className="font-medium text-brand-heading">со скрепкой</span> рядом с полем
+                сообщения.
+              </span>
+            ) : null}
           </div>
         )}
         {messages.map((m) => {

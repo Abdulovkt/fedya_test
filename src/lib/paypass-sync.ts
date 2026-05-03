@@ -40,7 +40,7 @@ function isExpired(createdAt: Date | null, nowMs: number) {
   return nowMs - createdAt.getTime() > PAYPASS_TTL_MS;
 }
 
-function emailCustomerProcessingAfterPayment(order: {
+export function emailCustomerProcessingAfterPayment(order: {
   id: number;
   email: string;
   customerName: string;
@@ -71,6 +71,7 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
       createdAt: orders.createdAt,
       status: orders.status,
       paymentStatus: orders.paymentStatus,
+      paymentMethod: orders.paymentMethod,
       publicOrderNumber: orders.publicOrderNumber,
       paypassPublicId: orders.paypassPublicId,
       paypassClientRequestId: orders.paypassClientRequestId,
@@ -112,6 +113,10 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
     return { orderId, updated: false, skipped: true, reason: "already_final" };
   }
 
+  if (order.paymentMethod === "bank_transfer") {
+    return { orderId, updated: false, skipped: true, reason: "bank_transfer_manual" };
+  }
+
   const now = Date.now();
   if (isExpired(order.createdAt, now)) {
     const nextOrderStatus = CANCELLABLE_ORDER_STATUSES.has(order.status)
@@ -137,6 +142,9 @@ export async function syncOrderPaymentStatusById(orderId: number): Promise<SyncO
       : null;
 
   if (!lookup) {
+    if (order.paymentMethod === "bank_transfer") {
+      return { orderId, updated: false, skipped: true, reason: "no_paypass_for_bank_transfer" };
+    }
     if (order.paymentStatus === "unpaid") {
       const displayOrderNumber = order.publicOrderNumber ?? `#${order.id}`;
       const clientRequestId = buildPublicPayPassClientRequestId(
@@ -228,6 +236,7 @@ export async function syncPendingOrderPayments(limit = 50) {
       and(
         inArray(orders.paymentStatus, ["pending", "unpaid"]),
         inArray(orders.status, ["new", "processing", "assembled", "cancelled"]),
+        eq(orders.paymentMethod, "paypass"),
       ),
     )
     .orderBy(asc(orders.createdAt))

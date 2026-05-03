@@ -6,7 +6,12 @@ import { formatPrice } from "@/lib/format";
 import { getCartLines, getCartPromoCode } from "@/lib/cart";
 import { getCheckoutAmounts } from "@/lib/pricing";
 import { getPromoValidationError } from "@/lib/promocodes";
-import { getSettings, getDeliveryFeesKopecksFromSettings } from "@/lib/settings";
+import {
+  getSettings,
+  getDeliveryFeesKopecksFromSettings,
+  isBankTransferConfigured,
+  isPaypassConfigured,
+} from "@/lib/settings";
 import { fulfillmentLabel, type FulfillmentType } from "@/lib/shipping";
 
 export const metadata = { title: "Оформление заказа" };
@@ -20,6 +25,12 @@ export default async function CheckoutPage() {
   const appliedPromo = promoError ? null : rawPromo;
 
   const settings = await getSettings();
+  const canPaypass = isPaypassConfigured(settings);
+  const canBank = isBankTransferConfigured(settings);
+  const checkoutPaymentsAvailable = canPaypass || canBank;
+  const defaultPaymentMethod: "paypass" | "bank_transfer" =
+    canPaypass && !canBank ? "paypass" : !canPaypass && canBank ? "bank_transfer" : "paypass";
+
   const fees = getDeliveryFeesKopecksFromSettings(settings);
   const priceLines = lines.map((l) => ({
     productId: l.productId,
@@ -53,11 +64,26 @@ export default async function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-brand-heading">Оформление заказа</h1>
+      {!checkoutPaymentsAvailable && (
+        <div
+          className="mt-6 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="status"
+        >
+          Оплата временно недоступна: в админке не настроены ни PayPass, ни реквизиты перевода на
+          карту. Обратитесь к администратору сайта.
+        </div>
+      )}
       <div className="mt-8 grid gap-10 lg:grid-cols-2">
         <CheckoutForm
           promoCode={rawPromo?.code ?? null}
           needsCdekPickup={needsCdekPickup}
           hasRussianPost={hasRussianPost}
+          paymentOptions={{
+            showPaypass: canPaypass,
+            showBank: canBank,
+            defaultMethod: defaultPaymentMethod,
+          }}
+          paymentsDisabled={!checkoutPaymentsAvailable}
         />
         <div>
           <h2 className="text-lg font-semibold text-brand-heading">Состав заказа</h2>

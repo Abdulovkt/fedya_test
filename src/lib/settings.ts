@@ -18,6 +18,10 @@ export const SETTING_KEYS = [
   "delivery_russian_post_rub",
   /** Мин. полных суток после доставки, чтобы оставить отзыв о товаре (0 — сразу). */
   "review_product_min_days_after_delivered",
+  /** Получатель для перевода на карту (как в банке). */
+  "bank_transfer_recipient_name",
+  /** Номер карты для перевода (без пробелов или с — как удобно клиенту). */
+  "bank_transfer_card_number",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -47,7 +51,19 @@ export async function getSettings(): Promise<EmailSettings> {
     paypass_sync_secret: map.paypass_sync_secret ?? process.env.PAYPASS_SYNC_SECRET ?? "",
     delivery_russian_post_rub: map.delivery_russian_post_rub ?? "0",
     review_product_min_days_after_delivered: map.review_product_min_days_after_delivered ?? "0",
+    bank_transfer_recipient_name: map.bank_transfer_recipient_name ?? "",
+    bank_transfer_card_number: map.bank_transfer_card_number ?? "",
   };
+}
+
+export function isBankTransferConfigured(s: EmailSettings): boolean {
+  return Boolean(
+    s.bank_transfer_recipient_name?.trim() && s.bank_transfer_card_number?.trim(),
+  );
+}
+
+export function isPaypassConfigured(s: EmailSettings): boolean {
+  return Boolean(s.paypass_api_key?.trim());
 }
 
 /** Парсинг сумм доставки из настроек (копейки). */

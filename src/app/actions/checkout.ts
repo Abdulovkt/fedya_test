@@ -11,7 +11,7 @@ import { releaseExpiredReservations } from "@/lib/reservation";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getCheckoutAmounts, type PriceLine } from "@/lib/pricing";
 import { getPromoValidationError, hasPromoBeenUsedByCustomer } from "@/lib/promocodes";
-import { getSettings, getDeliveryFeesKopecksFromSettings } from "@/lib/settings";
+import { getSettings, getDeliveryFeesKopecksFromSettings, isBankTransferConfigured, isPaypassConfigured } from "@/lib/settings";
 import { createPayPassRequest } from "@/lib/paypass";
 import {
   buildPublicPayPassClientRequestId,
@@ -110,6 +110,24 @@ export async function placeOrder(
   }
 
   const settings = await getSettings();
+  const canPaypass = isPaypassConfigured(settings);
+  const canBank = isBankTransferConfigured(settings);
+  if (!canPaypass && !canBank) {
+    return {
+      error:
+        "Оплата временно недоступна. В панели администратора в разделе «Настройки» укажите API-ключ PayPass и/или реквизиты перевода на карту.",
+    };
+  }
+  const requested = formData.get("paymentMethod")?.toString();
+  let paymentMethod: "paypass" | "bank_transfer";
+  if (canPaypass && canBank) {
+    paymentMethod = requested === "bank_transfer" ? "bank_transfer" : "paypass";
+  } else if (canBank) {
+    paymentMethod = "bank_transfer";
+  } else {
+    paymentMethod = "paypass";
+  }
+
   const fees = getDeliveryFeesKopecksFromSettings(settings);
   const priceLines: PriceLine[] = lines.map((l) => ({
     productId: l.productId,
@@ -196,6 +214,7 @@ export async function placeOrder(
           cdekPickupPoint: amounts.delivery.hasCdek ? cdekTrimmed : null,
           totalAmount: amounts.payableTotalKopecks,
           chatToken,
+          paymentMethod,
         })
         .returning({ id: orders.id, publicOrderNumber: orders.publicOrderNumber });
       break;
@@ -212,35 +231,37 @@ export async function placeOrder(
 
   const publicOrderNumber = order.publicOrderNumber ?? `#${order.id}`;
   const paypassClientRequestId = buildPublicPayPassClientRequestId(publicOrderNumber);
-  try {
-    const paypass = await createPayPassRequest({
-      amountRub: amounts.payableTotalKopecks / 100,
-      clientRequestId: paypassClientRequestId,
-      comment: `Заказ ${publicOrderNumber}`,
-      clientFio: parsed.data.customerName,
-      clientPhone: parsed.data.phone,
-    });
-    await db
-      .update(orders)
-      .set({
-        paypassPublicId: paypass.publicId,
-        paypassClientRequestId,
-        paypassTelegramLink: paypass.telegramLink,
-        paypassStatus: paypass.status,
-        paypassLastCheckedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, order.id));
-  } catch {
-    await db
-      .update(orders)
-      .set({
-        paymentStatus: "unpaid",
-        paymentFailureReason: "paypass_create_error",
-        paypassClientRequestId,
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, order.id));
+  if (paymentMethod === "paypass") {
+    try {
+      const paypass = await createPayPassRequest({
+        amountRub: amounts.payableTotalKopecks / 100,
+        clientRequestId: paypassClientRequestId,
+        comment: `Заказ ${publicOrderNumber}`,
+        clientFio: parsed.data.customerName,
+        clientPhone: parsed.data.phone,
+      });
+      await db
+        .update(orders)
+        .set({
+          paypassPublicId: paypass.publicId,
+          paypassClientRequestId,
+          paypassTelegramLink: paypass.telegramLink,
+          paypassStatus: paypass.status,
+          paypassLastCheckedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, order.id));
+    } catch {
+      await db
+        .update(orders)
+        .set({
+          paymentStatus: "unpaid",
+          paymentFailureReason: "paypass_create_error",
+          paypassClientRequestId,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, order.id));
+    }
   }
 
   await db.insert(orderItems).values(
@@ -282,6 +303,7 @@ export async function placeOrder(
     orderNumber: publicOrderNumber,
     orderRef: order.publicOrderNumber ?? String(order.id),
     chatToken,
+    paymentMethod,
   }).catch(() => {});
 
   redirect(`/checkout/success?order=${encodeURIComponent(publicOrderNumber)}&token=${chatToken}`);

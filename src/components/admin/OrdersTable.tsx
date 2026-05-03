@@ -35,6 +35,7 @@ type Order = {
   promoDiscountAmount: number;
   promoDiscountPercent: number;
   totalAmount: number;
+  paymentMethod: string;
   items: OrderItem[];
 };
 
@@ -109,6 +110,9 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                       className={`inline-flex w-fit rounded-full border px-2.5 py-0.5 text-xs font-medium ${payMeta.color}`}
                     >
                       {payMeta.label}
+                    </span>
+                    <span className="mt-1 block text-[10px] uppercase tracking-wide text-brand-muted/90">
+                      {o.paymentMethod === "bank_transfer" ? "перевод" : "paypass"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
