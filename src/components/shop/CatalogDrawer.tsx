@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { childrenOf, partitionRootsAndChildren, type CategoryRecord } from "@/lib/categories";
@@ -30,6 +31,7 @@ type Props = {
 export function CatalogDrawer({ allCategories, dark = false }: Props) {
   const { roots } = partitionRootsAndChildren(allCategories as CategoryRecord[]);
   const [open, setOpen] = useState(false);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const pathname = usePathname() ?? "";
   const titleId = useId();
   const panelId = useId();
@@ -42,6 +44,12 @@ export function CatalogDrawer({ allCategories, dark = false }: Props) {
   const catalogActive = pathname === "/catalog";
 
   const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setPortalTarget(document.body);
+    });
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -143,120 +151,128 @@ export function CatalogDrawer({ allCategories, dark = false }: Props) {
         Каталог
       </button>
 
-      <div
-        className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
-        aria-hidden={!open}
-      >
-        <div
-          className={`absolute inset-0 bg-black/50 ${overlayTransition} ${
-            open ? "opacity-100" : "opacity-0"
-          }`}
-          onClick={close}
-        />
-        <div
-          id={panelId}
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className={`absolute left-0 top-0 flex h-full w-[min(100%,20rem)] flex-col border-r shadow-xl ${
-            dark ? "border-white/10 bg-slate-900" : "border-brand-border bg-brand-elevated"
-          } ${panelTransition} ${open ? "translate-x-0" : "-translate-x-full"}`}
-        >
-          <div
-            className={`flex items-center justify-between border-b px-4 py-3 ${
-              dark ? "border-white/10" : "border-brand-border"
-            }`}
-          >
-            <h2 id={titleId} className={`text-base font-semibold ${dark ? "text-white" : "text-brand-heading"}`}>
-              Каталог
-            </h2>
-            <button
-              type="button"
-              ref={closeBtnRef}
-              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/60 focus-visible:ring-offset-2 ${
-                dark
-                  ? "border-white/15 text-slate-300 hover:bg-white/10 focus-visible:ring-offset-slate-900"
-                  : "border-brand-border text-brand-muted hover:bg-brand-elevated focus-visible:ring-offset-white"
-              }`}
-              aria-label="Закрыть меню каталога"
-              onClick={close}
+      {portalTarget
+        ? createPortal(
+            <div
+              className={`fixed inset-0 z-50 lg:hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}
+              aria-hidden={!open}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                aria-hidden="true"
+              <div
+                className={`absolute inset-0 bg-black/50 ${overlayTransition} ${
+                  open ? "opacity-100" : "opacity-0"
+                }`}
+                onClick={close}
+              />
+              <div
+                id={panelId}
+                ref={panelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                className={`absolute left-0 top-0 flex h-dvh max-h-dvh w-[min(100%,20rem)] flex-col border-r shadow-xl ${
+                  dark ? "border-white/10 bg-slate-900" : "border-brand-border bg-brand-elevated"
+                } ${panelTransition} ${open ? "translate-x-0" : "-translate-x-full"}`}
               >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <nav
-            className="min-h-0 flex-1 overflow-y-auto px-2 py-3"
-            aria-label="Категории"
-          >
-            <ul className="space-y-0.5">
-              <li>
-                <Link
-                  href="/catalog"
-                  onClick={close}
-                  className={`block rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
-                    catalogActive ? itemActive : itemInactive
+                <div
+                  className={`flex shrink-0 items-center justify-between border-b px-4 py-3 ${
+                    dark ? "border-white/10" : "border-brand-border"
                   }`}
-                  aria-current={catalogActive ? "page" : undefined}
                 >
-                  Все товары
-                </Link>
-              </li>
-              {roots.map((c) => {
-                const subs = childrenOf(c.id, allCategories as CategoryRecord[]);
-                const rootActive = categorySlug === c.slug;
-                return (
-                  <li key={c.id} className="space-y-0.5">
-                    <Link
-                      href={`/category/${c.slug}`}
-                      onClick={close}
-                      className={`block rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
-                        rootActive ? itemActive : itemInactive
-                      }`}
-                      aria-current={rootActive ? "page" : undefined}
+                  <h2
+                    id={titleId}
+                    className={`text-base font-semibold ${dark ? "text-white" : "text-brand-heading"}`}
+                  >
+                    Каталог
+                  </h2>
+                  <button
+                    type="button"
+                    ref={closeBtnRef}
+                    className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-brand-teal/60 focus-visible:ring-offset-2 ${
+                      dark
+                        ? "border-white/15 text-slate-300 hover:bg-white/10 focus-visible:ring-offset-slate-900"
+                        : "border-brand-border text-brand-muted hover:bg-brand-elevated focus-visible:ring-offset-white"
+                    }`}
+                    aria-label="Закрыть меню каталога"
+                    onClick={close}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      aria-hidden="true"
                     >
-                      {c.name}
-                    </Link>
-                    {subs.length > 0 ? (
-                      <ul className="ml-1 space-y-0.5 border-l border-slate-600/50 pl-3 dark:border-slate-600/50">
-                        {subs.map((ch) => {
-                          const active = categorySlug === ch.slug;
-                          return (
-                            <li key={ch.id}>
-                              <Link
-                                href={`/category/${ch.slug}`}
-                                onClick={close}
-                                className={`block rounded-lg py-1.5 pr-1 text-sm transition-colors duration-200 ${
-                                  active ? itemActive : itemInactive
-                                }`}
-                                aria-current={active ? "page" : undefined}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </div>
-      </div>
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <nav
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-2 py-3"
+                  aria-label="Категории"
+                >
+                  <ul className="space-y-0.5">
+                    <li>
+                      <Link
+                        href="/catalog"
+                        onClick={close}
+                        className={`block rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
+                          catalogActive ? itemActive : itemInactive
+                        }`}
+                        aria-current={catalogActive ? "page" : undefined}
+                      >
+                        Все товары
+                      </Link>
+                    </li>
+                    {roots.map((c) => {
+                      const subs = childrenOf(c.id, allCategories as CategoryRecord[]);
+                      const rootActive = categorySlug === c.slug;
+                      return (
+                        <li key={c.id} className="space-y-0.5">
+                          <Link
+                            href={`/category/${c.slug}`}
+                            onClick={close}
+                            className={`block rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
+                              rootActive ? itemActive : itemInactive
+                            }`}
+                            aria-current={rootActive ? "page" : undefined}
+                          >
+                            {c.name}
+                          </Link>
+                          {subs.length > 0 ? (
+                            <ul className="ml-1 space-y-0.5 border-l border-slate-600/50 pl-3 dark:border-slate-600/50">
+                              {subs.map((ch) => {
+                                const active = categorySlug === ch.slug;
+                                return (
+                                  <li key={ch.id}>
+                                    <Link
+                                      href={`/category/${ch.slug}`}
+                                      onClick={close}
+                                      className={`block rounded-lg py-1.5 pr-1 text-sm transition-colors duration-200 ${
+                                        active ? itemActive : itemInactive
+                                      }`}
+                                      aria-current={active ? "page" : undefined}
+                                    >
+                                      {ch.name}
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </div>
+            </div>,
+            portalTarget,
+          )
+        : null}
     </div>
   );
 }
